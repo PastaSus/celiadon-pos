@@ -1,12 +1,42 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import pool from '../db';
+import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth';
+import type { Product } from '../../shared/types';
 
 const router = Router();
 
+// Shared by POST and PUT: the body carries the full record in both cases,
+// so one validator keeps the two routes from drifting apart.
+function validateProductBody(
+  body: any
+): { name: string; price: number; stock_quantity: number } | string {
+  const { name, price, stock_quantity } = body;
+  if (name === undefined || price === undefined || stock_quantity === undefined) {
+    return 'Name, price, and stock_quantity are required';
+  }
+  // Only finite numbers >= 0 reach the DECIMAL column (a NaN would throw a
+  // pg error that surfaces as a 500 instead of a 400).
+  if (
+    typeof name !== 'string' ||
+    name.trim() === '' ||
+    typeof price !== 'number' ||
+    !Number.isFinite(price) ||
+    price < 0 ||
+    !Number.isInteger(stock_quantity) ||
+    stock_quantity < 0
+  ) {
+    return 'Name must be non-empty; price must be a number >= 0; stock_quantity must be an integer >= 0';
+  }
+  return { name, price, stock_quantity };
+}
+
+// Cashiers may read products because the POS grid needs them, but only admins
+// and managers may mutate inventory (CAP-1).
+
 // Get all products
-router.get('/', async (_req: Request, res: Response) => {
+router.get('/', requireAuth, async (_req: AuthedRequest, res: Response) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
+    const { rows } = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
     res.json(rows);
   } catch (error) {
     console.error('Error fetching products:', error);
@@ -15,14 +45,15 @@ router.get('/', async (_req: Request, res: Response) => {
 });
 
 // Get single product
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', requireAuth, async (req: AuthedRequest, res: Response) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
-    const products = rows as any[];
-    if (products.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
+    const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [req.params.id]);
+    const product = rows[0] as Product | undefined;
+    if (!product) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
     }
-    res.json(products[0]);
+    res.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
     res.status(500).json({ error: 'Failed to fetch product' });
@@ -30,60 +61,118 @@ router.get('/:id', async (req: Request, res: Response) => {
 });
 
 // Create product
-router.post('/', async (req: Request, res: Response) => {
-  try {
-    const { name, price, stock_quantity } = req.body;
-    if (!name || price === undefined || stock_quantity === undefined) {
-      return res.status(400).json({ error: 'Name, price, and stock_quantity are required' });
+router.post(
+  '/',
+  requireAuth,
+  requireRole('admin', 'manager'),
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const valid = validateProductBody(req.body);
+      if (typeof valid === 'string') {
+        res.status(400).json({ error: valid });
+        return;
+      }
+      const { category_id, reorder_level } = req.body;
+      // reorder_level is optional; when present it must be a non-negative
+      // integer so the DEFAULT 10 survives an explicit `reorder_level: 0`.
+      const reorderInt =
+        reorder_level === undefined || reorder_level === null ? 10 : reorder_level;
+      if (!Number.isInteger(reorderInt) || reorderInt < 0) {
+        res.status(400).json({ error: 'reorder_level must be an integer >= 0' });
+        return;
+      }
+      // category_id is optional; when present it must be an integer so pg
+      // never sees a string in the INT column (which surfaces as a 500).
+      const categoryInt = category_id === undefined || category_id === null ? null : category_id;
+      if (categoryInt !== null && !Number.isInteger(categoryInt)) {
+        res.status(400).json({ error: 'category_id must be an integer or null' });
+        return;
+      }
+      const { rows } = await pool.query(
+        `INSERT INTO products (name, price, stock_quantity, category_id, reorder_level)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`,
+        [valid.name.trim(), valid.price, valid.stock_quantity, categoryInt, reorderInt]
+      );
+      res.status(201).json(rows[0]);
+    } catch (error) {
+      console.error('Error creating product:', error);
+      res.status(500).json({ error: 'Failed to create product' });
     }
-    const [result] = await pool.query(
-      'INSERT INTO products (name, price, stock_quantity) VALUES (?, ?, ?)',
-      [name, price, stock_quantity]
-    );
-    const insertId = (result as any).insertId;
-    const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [insertId]);
-    res.status(201).json((rows as any[])[0]);
-  } catch (error) {
-    console.error('Error creating product:', error);
-    res.status(500).json({ error: 'Failed to create product' });
   }
-});
+);
 
 // Update product
-router.put('/:id', async (req: Request, res: Response) => {
-  try {
-    const { name, price, stock_quantity } = req.body;
-    if (!name || price === undefined || stock_quantity === undefined) {
-      return res.status(400).json({ error: 'Name, price, and stock_quantity are required' });
+router.put(
+  '/:id',
+  requireAuth,
+  requireRole('admin', 'manager'),
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const valid = validateProductBody(req.body);
+      if (typeof valid === 'string') {
+        res.status(400).json({ error: valid });
+        return;
+      }
+      const { category_id, reorder_level } = req.body;
+      const reorderInt =
+        reorder_level === undefined || reorder_level === null ? 10 : reorder_level;
+      if (!Number.isInteger(reorderInt) || reorderInt < 0) {
+        res.status(400).json({ error: 'reorder_level must be an integer >= 0' });
+        return;
+      }
+      const categoryInt = category_id === undefined || category_id === null ? null : category_id;
+      if (categoryInt !== null && !Number.isInteger(categoryInt)) {
+        res.status(400).json({ error: 'category_id must be an integer or null' });
+        return;
+      }
+      // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP, so updated_at is set here.
+      const { rows } = await pool.query(
+        `UPDATE products
+            SET name = $1, price = $2, stock_quantity = $3, category_id = $4,
+                reorder_level = $5, updated_at = NOW()
+          WHERE id = $6
+      RETURNING *`,
+        [
+          valid.name.trim(),
+          valid.price,
+          valid.stock_quantity,
+          categoryInt,
+          reorderInt,
+          req.params.id
+        ]
+      );
+      const product = rows[0] as Product | undefined;
+      if (!product) {
+        res.status(404).json({ error: 'Product not found' });
+        return;
+      }
+      res.json(product);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).json({ error: 'Failed to update product' });
     }
-    await pool.query(
-      'UPDATE products SET name = ?, price = ?, stock_quantity = ? WHERE id = ?',
-      [name, price, stock_quantity, req.params.id]
-    );
-    const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
-    const products = rows as any[];
-    if (products.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    res.json(products[0]);
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({ error: 'Failed to update product' });
   }
-});
+);
 
 // Delete product
-router.delete('/:id', async (req: Request, res: Response) => {
-  try {
-    const [result] = await pool.query('DELETE FROM products WHERE id = ?', [req.params.id]);
-    if ((result as any).affectedRows === 0) {
-      return res.status(404).json({ error: 'Product not found' });
+router.delete(
+  '/:id',
+  requireAuth,
+  requireRole('admin', 'manager'),
+  async (req: AuthedRequest, res: Response) => {
+    try {
+      const { rowCount } = await pool.query('DELETE FROM products WHERE id = $1', [req.params.id]);
+      if (rowCount === 0) {
+        res.status(404).json({ error: 'Product not found' });
+        return;
+      }
+      res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      res.status(500).json({ error: 'Failed to delete product' });
     }
-    res.json({ message: 'Product deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    res.status(500).json({ error: 'Failed to delete product' });
   }
-});
+);
 
 export default router;
