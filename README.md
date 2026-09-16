@@ -1,77 +1,127 @@
-# Cube POS
+# POS System
 
-A web-based Point of Sale system with inventory management. Built with React, Node.js/Express, and MySQL (TiDB Cloud).
-
-## Prerequisites
-
-- Node.js 18+
-- pnpm
-- TiDB Cloud (or MySQL) database
-
-## Setup
-
-1. Clone the repo and install dependencies:
-
-```bash
-pnpm install
-```
-
-2. Create `.env` in the project root:
-
-```
-DB_HOST=your-tidb-host
-DB_PORT=4000
-DB_USER=your-user
-DB_PASSWORD=your-password
-DB_NAME=cube_pos
-DB_SSL=true
-PORT=5000
-```
-
-3. Run the database schema against your TiDB Cloud instance:
-
-```bash
-mysql -h $DB_HOST -P $DB_PORT -u $DB_USER -p$DB_PASSWORD < database.sql
-```
-
-## Running
-
-Start the backend (port 5000):
-
-```bash
-node server/index.js
-```
-
-Start the frontend (port 5173):
-
-```bash
-pnpm run dev
-```
-
-Open http://localhost:5173
+A web-based Point of Sale (POS) system with basic inventory management built with React, Tailwind CSS, Node.js, Express, and MySQL.
 
 ## Features
 
-- **Dashboard** — Total products, inventory count, sales stats, recent sales
-- **Products** — CRUD with add/edit/delete modals and stock indicators
-- **POS** — Product grid, cart sidebar with quantity controls, checkout with inventory deduction
-- **Sales History** — Transaction log with receipt detail view
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | /api/products | List all products |
-| POST | /api/products | Create a product |
-| PUT | /api/products/:id | Update a product |
-| DELETE | /api/products/:id | Delete a product |
-| POST | /api/sales | Complete a sale |
-| GET | /api/sales | List all sales |
-| GET | /api/sales/:id | Get sale details |
-| GET | /api/dashboard | Get aggregate stats |
+1. **Inventory Management** - Add, edit, delete, and view products
+2. **Point of Sale** - Sales interface with cart functionality
+3. **Sales Transactions** - Transaction history with receipt generation
+4. **Dashboard** - Overview of key metrics
 
 ## Tech Stack
 
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS 4, React Router, Axios
-- **Backend:** Node.js, Express 5, mysql2
-- **Database:** MySQL (TiDB Cloud)
+- **Frontend:** React + Vite + Tailwind CSS
+- **Backend:** Node.js + Express
+- **Database:** MySQL (TiDB Cloud / MySQL compatible)
+
+## Prerequisites
+
+- Node.js (v18 or higher)
+- npm or yarn
+- MySQL database (local or cloud)
+
+## Installation
+
+### 1. Clone the repository
+
+```bash
+git clone <repository-url>
+cd pos-system
+```
+
+### 2. Install dependencies
+
+```bash
+# Install client dependencies
+cd client
+npm install
+
+# Install server dependencies
+cd ../server
+npm install
+```
+
+### 3. Database Setup
+
+1. Create a MySQL database
+2. Import the schema from `server/db.sql`
+
+```bash
+mysql -u username -p pos_system < server/db.sql
+```
+
+Or use a cloud database like TiDB Cloud.
+
+### 4. Configure Environment Variables
+
+Create a `.env` file in the `server` directory:
+
+```env
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=pos_system
+```
+
+### 5. Start the Application
+
+```bash
+# Terminal 1 - Start the server
+cd server
+npm run dev
+
+# Terminal 2 - Start the client
+cd client
+npm run dev
+```
+
+The application will be available at:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:5000
+
+## Database Schema
+
+### Products Table
+- `id` - Primary key
+- `name` - Product name
+- `price` - Product price
+- `stock_quantity` - Current stock
+- `created_at` - Creation timestamp
+- `updated_at` - Last update timestamp
+
+### Sales Table
+- `id` - Primary key
+- `receipt_number` - Unique receipt identifier
+- `total_amount` - Total sale amount
+- `transaction_date` - Transaction timestamp
+
+### Sales Details Table
+- `id` - Primary key
+- `sale_id` - Foreign key to Sales
+- `product_id` - Foreign key to Products
+- `quantity` - Quantity sold
+- `unit_price` - Price at time of sale
+- `subtotal` - Line item total
+
+## API Endpoints
+
+### Products
+- `GET /api/products` - Get all products
+- `GET /api/products/:id` - Get single product
+- `POST /api/products` - Create product
+- `PUT /api/products/:id` - Update product
+- `DELETE /api/products/:id` - Delete product
+
+### Sales
+- `GET /api/sales` - Get all sales
+- `GET /api/sales/:id` - Get sale details
+- `POST /api/sales` - Create new sale
+
+### Dashboard
+- `GET /api/dashboard` - Get dashboard statistics
+
+## License
+
+MIT
