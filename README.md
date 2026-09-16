@@ -66,9 +66,13 @@ PORT=5000
 
 ### 5. Seed the admin user
 
-`server/db.sql` inserts `admin@cubetech.pos` with a bcrypt-hashed demo password (documented
-separately — change it before deploying). The hash in the SQL file is a bcrypt hash of that
-demo password; only the hash is stored, never the plaintext.
+`server/db.sql` inserts the first admin user:
+
+- **Email:** `admin@cubetech.pos`
+- **Password:** `Admin123!` (demo only — change it via a new `/api/auth/register` + delete, or
+  update the hash, before any real use)
+
+The SQL stores only the bcrypt hash, never the plaintext.
 
 ### 6. Start the Application
 

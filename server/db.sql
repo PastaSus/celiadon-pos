@@ -68,10 +68,10 @@ CREATE INDEX IF NOT EXISTS idx_sales_details_sale ON sales_details(sale_id);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product ON stock_movements(product_id);
 
 -- Seed: first admin. Only the bcrypt hash is stored; the plaintext demo
--- password is documented in README.md and must be changed before deploying.
--- Demo password: admin123 — change this immediately in any real deployment.
+-- password (Admin123!) is documented in README.md and must be changed before
+-- any real use.
 INSERT INTO users (email, password_hash, role)
-VALUES ('admin@cubetech.pos', '$2a$10$VIK700GPgKvONvuMWPP95.kzQMvMYCtdd4x/bHdArie8Z0vk/syGW', 'admin')
+VALUES ('admin@cubetech.pos', '$2a$10$p4nnuzy5DxMmJFoFrLeDae0932o.UHZZtLB8.PTQ7EPPensD0JThu', 'admin')
 ON CONFLICT (email) DO NOTHING;
 
 -- Seed: sample products for testing
