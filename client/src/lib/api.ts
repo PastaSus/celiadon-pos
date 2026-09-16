@@ -1,57 +1,84 @@
-const API_BASE = '/api';
+import type { ApiError, AuthResponse, User } from '../../../shared/types';
+
+// Local dev: Vite proxies /api → localhost:5000. Deployed (Vercel): the
+// frontend is static, so set VITE_API_URL to the backend's URL
+// (e.g. https://cube-tech-pos-api.vercel.app). No trailing slash.
+const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api`;
+
+const TOKEN_KEY = 'pos.token';
+
+export class ApiRequestError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'ApiRequestError';
+    this.status = status;
+  }
+}
+
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setToken(token: string | null): void {
+  if (token === null) {
+    localStorage.removeItem(TOKEN_KEY);
+  } else {
+    localStorage.setItem(TOKEN_KEY, token);
+  }
+}
+
+// AuthContext registers here so a rejected session clears app state without
+// this module having to import React.
+type UnauthorizedHandler = () => void;
+let onUnauthorized: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null): void {
+  onUnauthorized = handler;
+}
 
 export async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  const token = getToken();
+
   const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
     headers: {
       'Content-Type': 'application/json',
-    },
-    ...options,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options?.headers
+    }
   });
-  
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
+    const body = (await response
+      .json()
+      .catch(() => ({ error: 'Request failed' }))) as Partial<ApiError>;
+
+    // Only an already-authenticated request can expire a session. A 401 from
+    // /auth/login means bad credentials, not a dead token.
+    if (response.status === 401 && token) {
+      setToken(null);
+      onUnauthorized?.();
+    }
+
+    throw new ApiRequestError(body.error || 'Request failed', response.status);
   }
-  
-  return response.json();
+
+  return response.json() as Promise<T>;
 }
 
-export interface Product {
-  id: number;
-  name: string;
-  price: number;
-  stock_quantity: number;
-  created_at: string;
-  updated_at: string;
+export function login(email: string, password: string): Promise<AuthResponse> {
+  return fetchApi<AuthResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password })
+  });
 }
 
-export interface Sale {
-  id: number;
-  receipt_number: string;
-  total_amount: number;
-  transaction_date: string;
-  items?: SaleDetail[];
+export function fetchMe(): Promise<User> {
+  return fetchApi<User>('/auth/me');
 }
 
-export interface SaleDetail {
-  id: number;
-  sale_id: number;
-  product_id: number;
-  quantity: number;
-  unit_price: number;
-  subtotal: number;
-  product_name?: string;
-}
-
-export interface DashboardStats {
-  total_products: number;
-  current_inventory: number;
-  total_sales: number;
-  total_revenue: number;
-  recent_sales: Sale[];
-}
-
-export interface CartItem {
-  product: Product;
-  quantity: number;
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 }
