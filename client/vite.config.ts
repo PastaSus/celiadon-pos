@@ -6,6 +6,10 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:5000'
+    },
+    // shared/types.ts sits outside client/, so Vite needs permission to serve it.
+    fs: {
+      allow: ['..']
     }
   }
 })
