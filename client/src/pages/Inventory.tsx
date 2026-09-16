@@ -1,64 +1,45 @@
 import { useEffect, useState } from 'react'
-import { fetchApi, Product } from '../lib/api'
+import type { Product } from '../../../shared/types'
+import { fetchApi, formatCurrency } from '../lib/api'
+import { Badge, Button, LoadingSpinner, Modal, Table, stockTone, useToast } from '../components'
+import type { Column } from '../components'
+
+const EMPTY_FORM = { name: '', price: '', stock_quantity: '' }
 
 export default function Inventory() {
+  const toast = useToast()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [formData, setFormData] = useState({ name: '', price: '', stock_quantity: '' })
+  const [pendingDelete, setPendingDelete] = useState<Product | null>(null)
+  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [saving, setSaving] = useState(false)
 
   const loadProducts = () => {
     fetchApi<Product[]>('/products')
       .then(setProducts)
-      .catch(console.error)
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : 'Failed to load products')
+      })
       .finally(() => setLoading(false))
   }
 
   useEffect(() => {
     loadProducts()
-  }, [])
+    // toast's identity is stable, so this still runs once on mount.
+  }, [toast])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      const data = {
-        name: formData.name,
-        price: parseFloat(formData.price),
-        stock_quantity: parseInt(formData.stock_quantity)
-      }
-      
-      if (editingProduct) {
-        await fetchApi(`/products/${editingProduct.id}`, {
-          method: 'PUT',
-          body: JSON.stringify(data)
-        })
-      } else {
-        await fetchApi('/products', {
-          method: 'POST',
-          body: JSON.stringify(data)
-        })
-      }
-      
-      setShowModal(false)
-      setEditingProduct(null)
-      setFormData({ name: '', price: '', stock_quantity: '' })
-      loadProducts()
-    } catch (error) {
-      console.error('Error saving product:', error)
-      alert('Failed to save product')
-    }
+  const closeModal = () => {
+    setShowModal(false)
+    setEditingProduct(null)
+    setFormData(EMPTY_FORM)
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return
-    try {
-      await fetchApi(`/products/${id}`, { method: 'DELETE' })
-      loadProducts()
-    } catch (error) {
-      console.error('Error deleting product:', error)
-      alert('Failed to delete product')
-    }
+  const openAddModal = () => {
+    setEditingProduct(null)
+    setFormData(EMPTY_FORM)
+    setShowModal(true)
   }
 
   const openEditModal = (product: Product) => {
@@ -71,136 +52,181 @@ export default function Inventory() {
     setShowModal(true)
   }
 
-  const openAddModal = () => {
-    setEditingProduct(null)
-    setFormData({ name: '', price: '', stock_quantity: '' })
-    setShowModal(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      const data = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        stock_quantity: parseInt(formData.stock_quantity, 10)
+      }
+
+      if (editingProduct) {
+        await fetchApi(`/products/${editingProduct.id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data)
+        })
+        toast.success('Product updated')
+      } else {
+        await fetchApi('/products', {
+          method: 'POST',
+          body: JSON.stringify(data)
+        })
+        toast.success('Product added')
+      }
+
+      closeModal()
+      loadProducts()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save product')
+    } finally {
+      setSaving(false)
+    }
   }
 
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+    try {
+      await fetchApi(`/products/${pendingDelete.id}`, { method: 'DELETE' })
+      toast.success('Product deleted')
+      setPendingDelete(null)
+      loadProducts()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete product')
+    }
+  }
+
+  const columns: Column<Product>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (product) => <span className="font-medium text-gray-900">{product.name}</span>
+    },
+    {
+      key: 'price',
+      header: 'Price',
+      render: (product) => <span className="text-gray-600">{formatCurrency(product.price)}</span>
+    },
+    {
+      key: 'stock',
+      header: 'Stock',
+      render: (product) => (
+        <Badge tone={stockTone(product.stock_quantity, product.reorder_level)}>
+          {product.stock_quantity}
+        </Badge>
+      )
+    },
+    {
+      key: 'created_at',
+      header: 'Created',
+      render: (product) => (
+        <span className="text-sm text-gray-500">
+          {new Date(product.created_at).toLocaleDateString()}
+        </span>
+      )
+    },
+    {
+      key: 'actions',
+      header: 'Actions',
+      render: (product) => (
+        <div className="flex gap-3">
+          <Button variant="ghost" size="sm" onClick={() => openEditModal(product)}>
+            Edit
+          </Button>
+          <Button variant="dangerGhost" size="sm" onClick={() => setPendingDelete(product)}>
+            Delete
+          </Button>
+        </div>
+      )
+    }
+  ]
+
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>
+    return <LoadingSpinner />
   }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Inventory Management</h1>
-        <button
-          onClick={openAddModal}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
-        >
-          + Add Product
-        </button>
+        <Button onClick={openAddModal}>+ Add Product</Button>
       </div>
 
-      {/* Products Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{product.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">₱{product.price.toFixed(2)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-1 text-xs rounded-full ${product.stock_quantity > 10 ? 'bg-green-100 text-green-800' : product.stock_quantity > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                      {product.stock_quantity}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(product.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <button
-                      onClick={() => openEditModal(product)}
-                      className="text-indigo-600 hover:text-indigo-900 mr-3"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-600 hover:text-red-900"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {products.length === 0 && (
-          <div className="text-center py-8 text-gray-500">No products yet. Add your first product!</div>
-        )}
-      </div>
+      <Table
+        columns={columns}
+        rows={products}
+        rowKey={(product) => product.id}
+        emptyMessage="No products yet. Add your first product!"
+      />
 
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold mb-4">{editingProduct ? 'Edit Product' : 'Add Product'}</h2>
-            <form onSubmit={handleSubmit}>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.stock_quantity}
-                  onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
-                  className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  required
-                />
-              </div>
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                >
-                  {editingProduct ? 'Update' : 'Add'}
-                </button>
-              </div>
-            </form>
+      <Modal
+        open={showModal}
+        title={editingProduct ? 'Edit Product' : 'Add Product'}
+        onClose={closeModal}
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+            <input
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
           </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price}
+              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+            <input
+              type="number"
+              min="0"
+              value={formData.stock_quantity}
+              onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value })}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button type="button" variant="secondary" onClick={closeModal}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : editingProduct ? 'Update' : 'Add'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal
+        open={pendingDelete !== null}
+        title="Delete product"
+        onClose={() => setPendingDelete(null)}
+      >
+        <p className="text-sm text-gray-600">
+          Delete <span className="font-semibold">{pendingDelete?.name}</span>? This cannot be undone.
+        </p>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={() => setPendingDelete(null)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Delete
+          </Button>
         </div>
-      )}
+      </Modal>
     </div>
   )
 }
