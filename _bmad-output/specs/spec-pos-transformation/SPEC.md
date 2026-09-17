@@ -58,7 +58,7 @@ The current POS system is a functional MVP (product CRUD, cart, checkout, transa
 - Vite dev server on port 5173, Express on port 5000 — keep this dev setup
 - Existing API routes (`/api/products`, `/api/sales`, `/api/dashboard`) must not break
 - Entire project uses free tools and services only — no paid APIs, no paid hosting tiers required
-- Deployment: Render (free web service) for Express server, Neon (free tier) for PostgreSQL
+- Deployment: two independent Vercel projects (`server/` → Express, `client/` → Vite static build) plus Neon (free tier) for PostgreSQL. Supersedes the original Render plan — Render has no config in the repo. Frontend reads `VITE_API_URL` at **build** time.
 
 ## Non-goals
 
@@ -80,5 +80,7 @@ The app looks and feels like a real retail POS: you log in, see a dashboard with
 
 ## Open Questions
 
-- Should the store name on receipts be configurable, or hardcode "Cube Tech POS"?
-- What is the default low-stock threshold — fixed at 10, or configurable per product?
+Both are resolved. The questions are kept verbatim above the answers so the decision trail survives; the answers are binding.
+
+- **Should the store name on receipts be configurable, or hardcode "Cube Tech POS"?** — **Hardcode**, as a single exported `STORE_NAME = "Cube Tech POS"` constant in the receipt module. Multi-store is a non-goal, so one constant keeps it swappable without touching layout.
+- **What is the default low-stock threshold — fixed at 10, or configurable per product?** — **Per product**: `products.reorder_level` with `DEFAULT 10`. Low stock is `quantity > 0 AND quantity <= reorder_level`; out of stock is `quantity <= 0`. (Both settled in `EXPERIENCE.md`.)
