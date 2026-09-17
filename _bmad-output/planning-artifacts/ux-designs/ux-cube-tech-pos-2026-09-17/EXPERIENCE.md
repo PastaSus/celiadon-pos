@@ -1,6 +1,6 @@
 ---
 name: Cube Tech POS
-status: draft
+status: final
 sources:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
   - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
@@ -200,10 +200,12 @@ Failure: the movements list is long and she cannot tell the products apart in on
 
 ## Open Items
 
-- **[ASSUMPTION] Receipt store name.** The receipt renders a hardcoded "Cube Tech POS" constant. Multi-store is a SPEC non-goal, so one exported constant keeps it swappable without touching layout. Confirm or reject at finalization.
-- **Low-stock threshold - settled.** Per-product `reorder_level` (DEFAULT 10), not a global 10. `stockTone()` is already parameterized, so the UI needs no rewrite.
-- **Chart default range - not yet chosen.** The Dashboard defaults to 30 days in Flow 2; confirm whether the default should follow the role or persist the last range the user picked.
-- **Receipt reprint rules - unspecified.** Anyone who can see Transactions can currently print. If reprints must be logged, that is a SPEC gap to raise rather than a UX decision to invent.
+All three non-blocking items were resolved by accepting the documented default. The palette itself is provisional in one sense only: it is reviewed again against the first built screen, and a change is a `tailwind.config.js` edit rather than a redesign.
+
+- **Receipt store name - accepted as an assumption.** The receipt renders one exported constant, `STORE_NAME = "Cube Tech POS"`, in the receipt module. Multi-store is a SPEC non-goal, so a single constant keeps it swappable without touching layout. If the store is later renamed, this is a one-line change.
+- **Low-stock threshold - settled.** Per-product `products.reorder_level` (DEFAULT 10), not a global 10. `stockTone()` is already parameterized, so the UI needs no rewrite.
+- **Chart default range - default 30 days, no persistence.** The Dashboard opens on the last 30 days every time. Role-based defaults and remembering the last picked range are both rejected for now: the SPEC does not ask for them, and a store manager comparing month over month changes the range once per visit. If it proves annoying in use, persistence is a `localStorage` addition in the Reports surface alone.
+- **Receipt reprint logging - raised as a SPEC gap, not a UX decision.** Anyone who can see Transactions can print, with no audit trail. Logging reprints as stock movements would be wrong (nothing moves), and inventing a `receipt_prints` table is schema work the SPEC does not authorize. Recorded here so CE can decide whether it becomes a story or stays out of scope.
 
 → Next: `bmad-create-epics-and-stories`, which reads this folder as the UX contract alongside `SPEC.md` and `ARCHITECTURE-SPINE.md`. Spine wins on conflict.
 

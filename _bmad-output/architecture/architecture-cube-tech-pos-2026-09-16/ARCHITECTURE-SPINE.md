@@ -5,12 +5,15 @@ purpose: build-substrate
 altitude: feature
 scope: 'Full POS transformation - auth, categories, payments, reports, stock alerts, receipts, components, shared types, responsive'
 paradigm: 'layered - routes (controllers) -> db (pool) -> PostgreSQL'
-status: draft
+status: final
 created: '2026-09-16'
-updated: '2026-09-16'
+updated: '2026-09-17'
 binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9]
-sources: []
-companions: []
+sources:
+  - _bmad-output/specs/spec-pos-transformation/SPEC.md
+companions:
+  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/DESIGN.md
+  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/EXPERIENCE.md
 ---
 
 # Architecture Spine — cube-tech-pos
@@ -54,7 +57,7 @@ Client:  pages/*.tsx  →  components/  →  lib/api.ts  →  /api/*
 
 - **Binds:** all client-side fetch calls
 - **Prevents:** hardcoded localhost URLs, CORS issues in production
-- **Rule:** Client always calls `/api/...` (relative). Vite proxy handles dev; Render handles production.
+- **Rule:** Client always calls `/api/...` (relative) in dev, where the Vite proxy forwards to `:5000`. In production the client is a separate Vercel project and reads `VITE_API_URL` at **build** time to reach the server deployment; Vite bakes that value into the bundle, so changing it requires a client redeploy, not just an env edit.
 
 ### AD-6 — Shared Types from Single Source
 
@@ -72,7 +75,7 @@ Client:  pages/*.tsx  →  components/  →  lib/api.ts  →  /api/*
 
 - **Binds:** all price displays, payment handling
 - **Prevents:** mixed currency symbols
-- **Rule:** Display as `$X.XX`. Store as decimal(10,2). API returns numeric values; client formats with `Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' })`.
+- **Rule:** Display as `$X.XX`. Store as decimal(10,2). API returns numeric values - the OID-1700 type parser in `server/db.ts` keeps `numeric` as a JS number rather than the pg default string. The client formats with `formatCurrency()` from `client/src/lib/api.ts`, never with a hand-typed symbol and never with a raw `Intl.NumberFormat` call in a page.
 
 ### AD-9 — Auth Context for Client State
 
@@ -84,7 +87,7 @@ Client:  pages/*.tsx  →  components/  →  lib/api.ts  →  /api/*
 
 - **Binds:** all deployment
 - **Prevents:** assumption of monolithic deployment
-- **Rule:** Client → Vercel (or Render static). Server → Render free web service. Database → Neon PostgreSQL free tier. `DATABASE_URL` env var on server only.
+- **Rule:** Two independent Vercel projects from this one repo - Root Directory `server` (Express via `server/api/index.ts`, which wraps the app for the serverless handler; `server/index.ts` only calls `listen` when run directly) and Root Directory `client` (Vite static build). Database → Neon PostgreSQL free tier. `DATABASE_URL` (or `POSTGRES_URL`) and `JWT_SECRET` are env vars on the server project only. Client needs `VITE_API_URL` at build time.
 
 ## Dependency Diagram
 
@@ -117,7 +120,10 @@ graph TD
 | IDs | Auto-incrementing integers (`SERIAL` in PostgreSQL) |
 | Timestamps | `created_at` / `updated_at` columns, PostgreSQL `DEFAULT NOW()` |
 | Dates | ISO 8601 strings in API, formatted for display in client |
-| Env vars | Server: `DATABASE_URL`, `JWT_SECRET`, `PORT`. Client: none (relative URLs). |
+| Env vars | Server: `DATABASE_URL` (or `POSTGRES_URL`), `JWT_SECRET`, `PORT`. Client: `VITE_API_URL` (build-time). Missing `JWT_SECRET` fails only on *correct* credentials - bcrypt passes, then `sign` throws - so it presents as a wrong-password bug. |
+| Auth token | Stored in `localStorage` via the helpers in `client/src/lib/api.ts`, sent as an `Authorization: Bearer` header. Not a cookie. |
+| Currency formatting | Always `formatCurrency()` from `client/src/lib/api.ts`. |
+| UI colors | Named palette tokens from `tailwind.config.js` (`brand`, `accent`, `teal`, `ink`). No raw `indigo-*`/`gray-*` classes in new code. |
 
 ## Stack
 
@@ -133,7 +139,7 @@ graph TD
 | React | ^18.3 | UI library |
 | Vite | ^5.4 | Build tool |
 | Tailwind CSS | ^3.4 | Styling |
-| Recharts | ^2.x | Dashboard charts |
+| Recharts | ^2.x | Dashboard / Reports charts - **not yet installed**; CAP-4 must add it to `client/package.json`. No other charting library. |
 | React Router | ^6.26 | Client routing |
 | concurrently | ^8.2 | Dev orchestration |
 
@@ -257,5 +263,9 @@ erDiagram
 - **Testing framework** — spec says testing comes later (Vitest + Playwright)
 - **CI/CD** — GitHub Actions, deferred to Phase 4
 - **Docker** — deferred to Phase 4
-- **Shared types Vite alias** — need to verify Vite supports importing from `../shared/` without alias first
 - **Receipt PDF generation** — print-only for now, PDF is a future enhancement
+
+### Resolved since the draft
+
+- **Shared types import path** — no Vite alias needed. Client pages import `shared/types` by relative path (`../../shared/types`), which Vite resolves for both `tsc` and the production build. Verified in shipped code; the alias idea is dropped.
+- **Deployment target** — Render was planned; the repo ships two Vercel projects instead (`server/vercel.json`, `client/vercel.json`). AD-5 and AD-10 were corrected to match.

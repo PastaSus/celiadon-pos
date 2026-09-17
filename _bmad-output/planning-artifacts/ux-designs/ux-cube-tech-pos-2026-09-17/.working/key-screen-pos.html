@@ -1,0 +1,365 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Cube Tech POS - key screen (palette review)</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  // Exact tokens from DESIGN.md. If this mock and DESIGN.md ever disagree, DESIGN.md wins.
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          brand:  { DEFAULT: '#1690E8', hover: '#0E7BCB', strong: '#0B5EA6', surface: '#D8EEFD', subtle: '#EBF6FE' },
+          accent: { DEFAULT: '#02F0FD', ink: '#07333D' },
+          teal:   { DEFAULT: '#3FE0D0' },
+          commit: { DEFAULT: '#0B7E71', hover: '#0A6A61', surface: '#CCFBF1', text: '#115E59' },
+          ink:    { DEFAULT: '#0A1929', soft: '#152A3F' },
+          canvas: '#E8EDF3',
+          panel:  '#F5F8FB',
+          line:   { DEFAULT: '#E0E0E0', strong: '#C2CFDB' },
+        },
+      },
+    },
+  };
+</script>
+<style>
+  body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .glow    { box-shadow: 0 0 14px rgba(2, 240, 253, 0.55); }
+  .glow-sm { box-shadow: 0 0 8px rgba(2, 240, 253, 0.75); }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .receipt { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+</style>
+</head>
+<body class="bg-canvas text-slate-800">
+
+<!-- ============ NAV CHROME (ink) ============ -->
+<header class="bg-ink">
+  <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
+    <div class="flex items-center gap-2">
+      <span class="h-3 w-3 rounded-full bg-accent glow-sm"></span>
+      <span class="text-lg font-extrabold tracking-tight text-white">Cube Tech POS</span>
+    </div>
+    <nav class="hidden items-center gap-1 md:flex">
+      <a class="rounded-md bg-brand px-3 py-2 text-sm font-medium text-white">Point of Sale</a>
+      <a class="rounded-md px-3 py-2 text-sm font-medium text-slate-300">Inventory</a>
+      <a class="rounded-md px-3 py-2 text-sm font-medium text-slate-300">Transactions</a>
+      <a class="rounded-md px-3 py-2 text-sm font-medium text-slate-300">Dashboard</a>
+      <a class="rounded-md px-3 py-2 text-sm font-medium text-slate-300">Reports</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <span class="hidden text-xs text-slate-400 md:inline">rosa@cubetech.com &middot; cashier</span>
+      <button class="rounded-lg border border-white/20 px-3 py-1.5 text-sm text-slate-200">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main class="mx-auto max-w-7xl px-4 py-6">
+  <div class="mb-6 flex items-end justify-between">
+    <div>
+      <h1 class="text-2xl font-extrabold tracking-tight text-ink">Point of Sale</h1>
+      <p class="text-sm text-slate-500">Tap a product to add it to the current sale.</p>
+    </div>
+    <span class="rounded-full bg-brand-surface px-3 py-1 text-xs font-semibold text-brand-strong">Register open</span>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <section class="lg:col-span-2">
+      <div class="mb-4 flex flex-wrap gap-2">
+        <button class="rounded-full bg-brand px-4 py-2 text-xs font-semibold text-white">All</button>
+        <button class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-brand-strong ring-1 ring-line">Cables</button>
+        <button class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-brand-strong ring-1 ring-line">Cases</button>
+        <button class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-brand-strong ring-1 ring-line">Chargers</button>
+        <button class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-brand-strong ring-1 ring-line">Audio</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 xl:grid-cols-3">
+
+        <button class="rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-line transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand">
+          <p class="text-sm font-semibold text-ink">USB-C to Lightning Cable 1m</p>
+          <p class="mt-1 text-xs text-slate-500">Cables</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="tabular text-lg font-extrabold text-ink">$12.99</span>
+            <span class="rounded-full bg-commit-surface px-2 py-0.5 text-xs font-medium text-commit-text">24 in stock</span>
+          </div>
+        </button>
+
+        <button class="rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-line transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand">
+          <p class="text-sm font-semibold text-ink">Silicone Phone Case - Midnight</p>
+          <p class="mt-1 text-xs text-slate-500">Cases</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="tabular text-lg font-extrabold text-ink">$14.50</span>
+            <span class="rounded-full bg-commit-surface px-2 py-0.5 text-xs font-medium text-commit-text">41 in stock</span>
+          </div>
+        </button>
+
+        <button class="rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-line transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand">
+          <p class="text-sm font-semibold text-ink">USB-C Hub 7-in-1</p>
+          <p class="mt-1 text-xs text-slate-500">Cables</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="tabular text-lg font-extrabold text-ink">$49.99</span>
+            <span class="rounded-full bg-commit-surface px-2 py-0.5 text-xs font-medium text-commit-text">17 in stock</span>
+          </div>
+        </button>
+
+        <button class="rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-line transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand">
+          <p class="text-sm font-semibold text-ink">Tempered Glass Screen Protector</p>
+          <p class="mt-1 text-xs text-slate-500">Cases</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="tabular text-lg font-extrabold text-ink">$8.50</span>
+            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">6 low</span>
+          </div>
+        </button>
+
+        <button class="rounded-lg bg-white p-4 text-left shadow-sm ring-1 ring-line transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-brand">
+          <p class="text-sm font-semibold text-ink">Wireless Earbuds Pro</p>
+          <p class="mt-1 text-xs text-slate-500">Audio</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="tabular text-lg font-extrabold text-ink">$79.99</span>
+            <span class="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">3 low</span>
+          </div>
+        </button>
+
+        <button class="cursor-not-allowed rounded-lg bg-white p-4 text-left opacity-50 shadow-sm ring-1 ring-line">
+          <p class="text-sm font-semibold text-ink">65W GaN Charger</p>
+          <p class="mt-1 text-xs text-slate-500">Chargers</p>
+          <div class="mt-3 flex items-center justify-between">
+            <span class="tabular text-lg font-extrabold text-ink">$34.99</span>
+            <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800">Out of stock</span>
+          </div>
+        </button>
+
+      </div>
+    </section>
+
+    <!-- ============ CART (desktop column) ============ -->
+    <aside class="lg:col-span-1">
+      <div class="sticky top-4 rounded-lg bg-white shadow-sm ring-1 ring-line">
+        <div class="flex items-center justify-between border-b border-line px-6 py-4">
+          <h2 class="text-xl font-bold text-ink">Current Sale</h2>
+          <span class="rounded-full bg-brand-surface px-2 py-0.5 text-xs font-semibold text-brand-strong">3 items</span>
+        </div>
+
+        <div class="divide-y divide-line">
+          <div class="flex items-start justify-between gap-3 px-6 py-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-ink">Silicone Phone Case - Midnight</p>
+              <p class="tabular text-xs text-slate-500">$14.50 each</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="h-8 w-8 rounded-lg bg-canvas text-sm font-bold text-ink">-</button>
+              <span class="tabular w-6 text-center text-sm font-semibold text-ink">2</span>
+              <button class="h-8 w-8 rounded-lg bg-canvas text-sm font-bold text-ink">+</button>
+              <span class="tabular w-16 text-right text-sm font-semibold text-ink">$29.00</span>
+            </div>
+          </div>
+          <div class="flex items-start justify-between gap-3 px-6 py-3">
+            <div class="min-w-0">
+              <p class="truncate text-sm font-medium text-ink">USB-C to Lightning Cable 1m</p>
+              <p class="tabular text-xs text-slate-500">$12.99 each</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button class="h-8 w-8 rounded-lg bg-canvas text-sm font-bold text-ink">-</button>
+              <span class="tabular w-6 text-center text-sm font-semibold text-ink">1</span>
+              <button class="h-8 w-8 rounded-lg bg-canvas text-sm font-bold text-ink">+</button>
+              <span class="tabular w-16 text-right text-sm font-semibold text-ink">$12.99</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-line px-6 py-4">
+          <p class="mb-2 text-sm font-medium text-slate-600">Payment method</p>
+          <div class="flex gap-1 rounded-lg bg-brand-subtle p-1">
+            <button class="flex-1 rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-white">Cash</button>
+            <button class="flex-1 rounded-lg px-3 py-2 text-sm font-semibold text-brand-strong">Card</button>
+            <button class="flex-1 rounded-lg px-3 py-2 text-sm font-semibold text-brand-strong">E-Wallet</button>
+          </div>
+        </div>
+
+        <div class="rounded-b-lg bg-ink px-6 py-4">
+          <div class="flex items-end justify-between">
+            <span class="text-xs font-medium uppercase tracking-wider text-slate-400">Total</span>
+            <span class="tabular glow text-3xl font-extrabold text-accent">$41.99</span>
+          </div>
+          <button class="mt-4 w-full rounded-lg bg-commit px-4 py-3 text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-accent">
+            Complete Sale
+          </button>
+        </div>
+      </div>
+
+      <p class="mt-3 text-center text-xs text-slate-500">Cart survives filter changes. Escape closes the drawer, never the sale.</p>
+    </aside>
+
+  </div>
+</main>
+
+<!-- ============ MOBILE: bottom bar + cart drawer ============ -->
+<section class="mx-auto max-w-7xl px-4 pb-6">
+  <h2 class="mb-1 text-lg font-semibold text-ink">Mobile - under lg</h2>
+  <p class="mb-4 text-sm text-slate-500">The cart becomes a drawer; the summary bar is always on screen and never loses the total.</p>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="mx-auto w-full max-w-xs rounded-[2rem] bg-ink p-3 shadow-lg">
+      <div class="rounded-[1.5rem] bg-canvas p-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-lg bg-white p-3 shadow-sm ring-1 ring-line">
+            <p class="text-xs font-semibold text-ink">USB-C Cable 1m</p>
+            <p class="tabular mt-2 text-base font-extrabold text-ink">$12.99</p>
+            <span class="mt-2 inline-block rounded-full bg-commit-surface px-2 py-0.5 text-[10px] font-medium text-commit-text">24 in stock</span>
+          </div>
+          <div class="rounded-lg bg-white p-3 shadow-sm ring-1 ring-line">
+            <p class="text-xs font-semibold text-ink">Earbuds Pro</p>
+            <p class="tabular mt-2 text-base font-extrabold text-ink">$79.99</p>
+            <span class="mt-2 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">3 low</span>
+          </div>
+        </div>
+      </div>
+      <div class="mt-3 flex items-center justify-between rounded-2xl bg-ink px-4 py-3 ring-1 ring-white/10">
+        <div>
+          <p class="text-[10px] uppercase tracking-wider text-slate-400">3 items</p>
+          <p class="tabular glow text-xl font-extrabold text-accent">$41.99</p>
+        </div>
+        <button class="rounded-lg bg-commit px-4 py-2.5 text-sm font-semibold text-white">View cart</button>
+      </div>
+    </div>
+
+    <div class="overflow-hidden rounded-lg bg-white shadow-lg ring-1 ring-line">
+      <div class="flex items-center justify-between border-b border-line px-5 py-3">
+        <span class="mx-auto h-1.5 w-10 rounded-full bg-line-strong"></span>
+      </div>
+      <div class="px-5 py-4">
+        <h3 class="text-xl font-bold text-ink">Current Sale</h3>
+        <div class="mt-3 space-y-2">
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-ink">Silicone Case x2</span>
+            <span class="tabular font-semibold text-ink">$29.00</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-ink">USB-C Cable x1</span>
+            <span class="tabular font-semibold text-ink">$12.99</span>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-1 rounded-lg bg-brand-subtle p-1">
+          <button class="flex-1 rounded-lg bg-brand px-3 py-2 text-xs font-semibold text-white">Cash</button>
+          <button class="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-brand-strong">Card</button>
+          <button class="flex-1 rounded-lg px-3 py-2 text-xs font-semibold text-brand-strong">E-Wallet</button>
+        </div>
+      </div>
+      <div class="flex items-center justify-between bg-ink px-5 py-4">
+        <span class="tabular glow text-2xl font-extrabold text-accent">$41.99</span>
+        <button class="rounded-lg bg-commit px-5 py-3 text-sm font-semibold text-white">Complete Sale</button>
+      </div>
+
+<!-- ============ PALETTE VOCABULARY ============ -->
+<section class="mx-auto max-w-7xl px-4 pb-10">
+  <h2 class="mb-1 text-lg font-semibold text-ink">Palette vocabulary</h2>
+  <p class="mb-4 text-sm text-slate-500">Every color in the system, shown in the role it is allowed to play.</p>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Buttons</h3>
+      <div class="flex flex-wrap items-center gap-3">
+        <button class="rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white">Primary</button>
+        <button class="rounded-lg bg-commit px-4 py-2 text-sm font-semibold text-white">Complete Sale</button>
+        <button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">Delete</button>
+        <button class="rounded-lg bg-line px-4 py-2 text-sm font-semibold text-slate-800">Secondary</button>
+        <button class="rounded-lg border border-line-strong bg-white px-4 py-2 text-sm font-semibold text-slate-800">Cancel</button>
+        <button class="rounded-lg px-4 py-2 text-sm font-semibold text-brand">Ghost</button>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">Azure for intent, deep teal for commit, red for destructive only.</p>
+    </div>
+
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Badges - stock truth</h3>
+      <div class="flex flex-wrap items-center gap-3">
+        <span class="rounded-full bg-commit-surface px-3 py-1 text-xs font-medium text-commit-text">24 in stock</span>
+        <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">6 low</span>
+        <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">Out of stock</span>
+        <span class="rounded-full bg-canvas px-3 py-1 text-xs font-medium text-slate-800">Adjustment</span>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">Amber at or below reorder level, red only at zero, slate for no judgment.</p>
+    </div>
+
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Toasts</h3>
+      <div class="space-y-3">
+        <div class="flex items-center gap-3 rounded-lg bg-ink px-4 py-3 ring-1 ring-accent">
+          <span class="h-2 w-2 rounded-full bg-accent glow-sm"></span>
+          <span class="text-sm text-white">Sale completed - REC-1042</span>
+        </div>
+        <div class="flex items-center gap-3 rounded-lg bg-white px-4 py-3 ring-1 ring-red-200">
+          <span class="h-2 w-2 rounded-full bg-red-600"></span>
+          <span class="text-sm text-slate-800">Not enough stock for USB-C Hub 7-in-1</span>
+        </div>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">Success is a register chime on navy with the cyan edge, never a gray system note.</p>
+    </div>
+
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Charts - five fixed series</h3>
+      <div class="flex flex-wrap gap-4">
+        <span class="flex items-center gap-2 text-xs text-slate-600"><span class="h-3 w-3 rounded-full" style="background:#1690E8"></span>Revenue</span>
+        <span class="flex items-center gap-2 text-xs text-slate-600"><span class="h-3 w-3 rounded-full" style="background:#0B7E71"></span>Cash</span>
+        <span class="flex items-center gap-2 text-xs text-slate-600"><span class="h-3 w-3 rounded-full" style="background:#3FE0D0"></span>Card</span>
+        <span class="flex items-center gap-2 text-xs text-slate-600"><span class="h-3 w-3 rounded-full" style="background:#0A1929"></span>E-Wallet</span>
+        <span class="flex items-center gap-2 text-xs text-slate-600"><span class="h-3 w-3 rounded-full" style="background:#EAB308"></span>Units</span>
+        <span class="flex items-center gap-2 text-xs text-slate-600"><span class="h-3 w-3 rounded-full" style="background:#64748B"></span>Other</span>
+      </div>
+      <div class="mt-4 flex h-16 items-end gap-2 rounded-lg bg-panel p-3">
+        <span class="w-full rounded-t bg-brand" style="height:45%"></span>
+        <span class="w-full rounded-t bg-brand" style="height:70%"></span>
+        <span class="w-full rounded-t bg-brand" style="height:35%"></span>
+        <span class="w-full rounded-t bg-brand" style="height:90%"></span>
+        <span class="w-full rounded-t bg-brand" style="height:60%"></span>
+        <span class="w-full rounded-t bg-brand" style="height:80%"></span>
+      </div>
+      <p class="mt-3 text-xs text-slate-500">Grid lines are #E0E0E0; teal is for bars and areas, never thin text.</p>
+    </div>
+  </div>
+
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <div class="flex items-center gap-2">
+        <span class="h-2 w-2 rounded-full bg-brand"></span>
+        <span class="text-xs text-slate-500">Today's revenue</span>
+      </div>
+      <p class="tabular mt-2 text-2xl font-extrabold text-ink">$1,284.50</p>
+    </div>
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <div class="flex items-center gap-2">
+        <span class="h-2 w-2 rounded-full bg-teal"></span>
+        <span class="text-xs text-slate-500">Avg transaction</span>
+      </div>
+      <p class="tabular mt-2 text-2xl font-extrabold text-ink">$42.82</p>
+    </div>
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <div class="flex items-center gap-2">
+        <span class="h-2 w-2 rounded-full bg-ink"></span>
+        <span class="text-xs text-slate-500">Sales today</span>
+      </div>
+      <p class="tabular mt-2 text-2xl font-extrabold text-ink">30</p>
+    </div>
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <div class="flex items-center gap-2">
+        <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+        <span class="text-xs text-slate-500">Low stock items</span>
+      </div>
+      <p class="tabular mt-2 text-2xl font-extrabold text-amber-800">3</p>
+    </div>
+  </div>
+
+  <p class="mt-8 rounded-lg bg-panel p-4 text-xs text-slate-500">
+    Mock for palette review only - not built code, and not a layout contract. Layout and behavior live in
+    <span class="font-semibold text-slate-700">EXPERIENCE.md</span>; color lives in
+    <span class="font-semibold text-slate-700">DESIGN.md</span>. Both win on conflict with this file.
+    Rendered with the Tailwind Play CDN, so it needs a network connection to style correctly.
+  </p>
+</section>
+
+</body>
+</html>
+
+    </div>
+  </div>
+</section>

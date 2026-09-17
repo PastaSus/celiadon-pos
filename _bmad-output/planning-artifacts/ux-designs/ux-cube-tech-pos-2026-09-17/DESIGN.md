@@ -1,7 +1,7 @@
 ---
 name: Cube Tech POS
 description: Retail point-of-sale for a single store. Azure/teal/cyan palette on dark-navy chrome inspired by Square, Toast, and Shopify POS, shipped via tailwind.config.js theme.extend (brand, accent, teal, ink); this file specifies the system the remaining capabilities build against.
-status: draft
+status: final
 sources:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
   - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
@@ -122,6 +122,8 @@ Two color systems operate in this product, and they must not be confused with ea
 **The slate ramp does one job - separating foreground from background.** `{colors.text}` for headings and values, `{colors.text-strong}` for the emphasized cell in a table, `{colors.text-muted}` for labels, meta text, and empty states, `{colors.text-subtle}` for idle nav and secondary button text. Do not add a sixth step for a sixth purpose; pick the nearest existing one. Body text renders in slate because `text-gray-*` classes migrate to `text-slate-*` with the palette.
 
 **Avoid:** tinted panels used as decoration, azure for status, cyan body text on white (accent is glow-only), red for anything non-destructive, chart colors chosen per-chart to "look nicer," and hardcoded currency symbols anywhere in the UI. Money is rendered by `formatCurrency()` and nothing else.
+
+**Reviewing this palette is a config change, not a redesign.** Every value here is a named token in `tailwind.config.js`, and every surface references tokens rather than literals. Adjusting a hue after seeing a built screen means editing one hex in one file; it does not mean revisiting layout, spacing, or component structure. That is deliberate, because the palette is the decision most likely to be revisited once the POS screen is real and the least likely to invalidate anything else.
 
 ## Typography
 
