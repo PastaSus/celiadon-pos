@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1]
+stepsCompleted: [1, 2]
 inputDocuments:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
   - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
@@ -162,8 +162,105 @@ UX-DR32: Dark mode is out of scope; do not add dark: variants.
 
 ### FR Coverage Map
 
-_To be completed in the epic design step._
+Every FR maps to exactly one epic. Epic 1 carries the shipped-capability verification because it is the epic that performs the mass refactor those capabilities must survive.
+
+```
+FR1:  Epic 1 - Login-only access for anonymous visitors, verified after the refactor (auth shipped)
+FR2:  Epic 1 - Valid credentials return a working JWT, verified (auth shipped)
+FR3:  Epic 1 - Generic credential error, verified (auth shipped)
+FR4:  Epic 1 - Role-filtered nav and route guards, verified after App.tsx is touched by the palette migration
+FR5:  Epic 1 - Admin-only registration returns 403 for non-admins, verified (auth shipped)
+FR6:  Epic 1 - Expired token clears the session and returns to Login, verified (auth shipped)
+FR7:  Epic 1 - Cashier lands on POS, admin and manager on Dashboard, verified (shipped)
+FR8:  Epic 2 - A product belongs to at most one category and shows it as a badge
+FR9:  Epic 2 - Category CRUD, with deletion refused while products reference it
+FR10: Epic 2 - Inventory search by name, case-insensitive, under 200ms
+FR11: Epic 2 - Search and category filter combine as AND, with a clear-filters action
+FR12: Epic 2 - POS grid filters by category without a request
+FR13: Epic 2 - POS grid searches by product name
+FR14: Epic 3 - Payment method control with cash / card / e-wallet, defaulting to cash
+FR15: Epic 3 - Selected method persisted on the sale and returned by the sales API
+FR16: Epic 3 - Payment method displayed as text wherever a transaction is shown
+FR17: Epic 3 - Revenue broken down by payment method for a chosen range
+FR18: Epic 4 - Revenue line chart with a daily / weekly / monthly toggle
+FR19: Epic 4 - Top 5 products bar chart
+FR20: Epic 4 - Payment-method pie chart
+FR21: Epic 4 - Total revenue, average transaction, and today's sales metrics
+FR22: Epic 4 - One date range control filters all charts and metrics, inclusive of both endpoints
+FR23: Epic 4 - Empty range shows "No sales in this range" inside each chart panel
+FR24: Epic 2 - Every quantity change writes a stock movement with product, type, quantity, reason, user, timestamp
+FR25: Epic 2 - stockTone rule drives low-stock and out-of-stock badges, with the number always visible
+FR26: Epic 2 - Stock Movements lists who / why / when, filterable by product and type
+FR27: Epic 4 - Dashboard low-stock callout that navigates to Inventory pre-filtered
+FR28: Epic 3 - Sale decrements stock and records a movement atomically, or rolls back entirely
+FR29: Epic 2 - Restock or adjust with a reason, attributed to the signed-in user
+FR30: Epic 3 - Receipt renders store name, number, date, line items, subtotal, total, method, cashier
+FR31: Epic 3 - Print action opens the browser print dialog showing only the receipt
+FR32: Epic 3 - Receipt reopened from transaction history and reprinted
+FR33: Epic 1 - Every specified component exists and no page inlines its own modal or table
+FR34: Epic 1 - shared/types.ts remains the single source for both packages, verified (shipped)
+FR35: Epic 5 - Below 768px the nav collapses to a hamburger drawer with the user meta and sign out
+FR36: Epic 5 - Below 1024px the cart is a drawer behind an always-visible count and total
+FR37: Epic 5 - Dashboard and Reports stack to one column; tables scroll horizontally
+FR38: Epic 5 - Cart survives filtering and drawer open/close; only a sale or removal empties it
+```
+
+**Nothing is unmapped.** All 38 FRs land in an epic. FR1-FR7 and FR34 are verification-only because CAP-1 and CAP-8 already ship; FR33 is satisfied across Epic 1 (existing components) and the feature epics (new ones).
+
+UX Design Requirements coverage, all 32 mapped:
+
+```
+Epic 1: UX-DR1 (palette tokens), UX-DR2 (migrate every existing indigo/gray class), UX-DR3 (lucide-react install and close-glyph replacement), UX-DR13 (EmptyState), UX-DR15 (no glow), UX-DR16 (focus visibility), UX-DR17 (htmlFor label association), UX-DR18 (overlays behave as dialogs), UX-DR19 (icon-only controls labeled), UX-DR20 (toast announces), UX-DR22 (five states per surface), UX-DR25 (one primary action per surface), UX-DR27 (money via formatCurrency), UX-DR28 (voice rules), UX-DR31 (type tokens), UX-DR32 (no dark mode)
+Epic 2: UX-DR4 (SearchInput), UX-DR5 (FilterSelect), UX-DR6 (CategoryChips), UX-DR14 (stockTone single rule), UX-DR26 (live filters, clear action)
+Epic 3: UX-DR8 (PaymentMethodControl), UX-DR12 (ReceiptView), UX-DR23 (mutations refresh what they invalidated), UX-DR24 (no optimistic money), UX-DR29 (receipt presentation)
+Epic 4: UX-DR9 (StatCard), UX-DR10 (ChartPanel), UX-DR11 (DateRangeBar), UX-DR30 (chart presentation)
+Epic 5: UX-DR7 (CartDrawer), UX-DR21 (breakpoint discipline)
+```
 
 ## Epic List
 
-_To be completed in the epic design step._
+### Epic 1: The product looks and behaves like one app
+
+Every shipped surface uses the azure/teal/cyan system on navy chrome, one icon library, and an accessibility floor that holds everywhere. After this epic the app stops running two visual systems at once, and a keyboard user can operate it.
+
+**FRs covered:** none new - this epic is the NFR6 / NFR9 / NFR11 and UX-DR foundation (see coverage map).
+
+**Implementation notes:** this epic exists because it is the only way to avoid churning the same files six times. The palette migration touches all 6 shipped components, all 5 pages, and `App.tsx`; if it were spread across the feature epics, every feature would rewrite the same class strings. One pass, in one epic, before any feature work.
+
+Stories must be sliced so each stays inside a single dev context: tokens and config first, then the icon dependency and the close-glyph replacement, then the component migration, then the page migration, then the cross-cutting rules (focus, labels, overlay behavior, toasts, money formatting, voice), then a regression story proving the role-filtered nav and auth still work after the mass refactor - a mass color refactor touching `App.tsx` is exactly where role filtering silently breaks.
+
+### Epic 2: Organize the catalog, find anything, and know what is running low
+
+A manager can group products into categories, find any product by name in well under a second, filter down to what is actually low, and see the full history of why a quantity changed.
+
+**FRs covered:** FR8, FR9, FR10, FR11, FR12, FR13, FR24, FR25, FR26, FR29
+
+**Implementation notes:** CAP-2 and CAP-5 are consolidated because they are one domain and one file set - `Inventory.tsx`, `products.ts`, plus the new `categories.ts` and `stock.ts` routes. Split apart, `Inventory.tsx` would be rewritten twice and the low-stock filter would have to be bolted on after the fact. The `categories`, `stock_movements`, `products.category_id`, and `products.reorder_level` schema already exists, so no story invents tables. `SearchInput` and `FilterSelect` are created here and later reused by Stock Movements; the low-stock filter is one of the filter states rather than a separate page.
+
+### Epic 3: Take the money, and prove it
+
+A cashier records how the customer paid, a sale either fully succeeds or fully rolls back, and any sale - today's or last week's - can be printed as a receipt.
+
+**FRs covered:** FR14, FR15, FR16, FR17, FR28, FR30, FR31, FR32
+
+**Implementation notes:** CAP-3 and CAP-6 are consolidated because both are the sale transaction end to end - `POS.tsx` commits it, `routes/sales.ts` records it, `Transactions.tsx` proves it, and the receipt renders what was recorded. Separating them would mean touching the sale payload twice. The atomicity story (FR28) belongs here rather than in the stock epic because the transaction wraps sale creation; the movement row it writes uses the `stock_movements` table that already exists. Receipt printing is browser print plus `@media print` - no PDF library, and the store name comes from a single exported constant.
+
+### Epic 4: See how the store is doing
+
+An owner or manager sees revenue over time, a daily/weekly/monthly toggle, the top products, the payment mix, the key numbers, and - in the same view - how many products are running low.
+
+**FRs covered:** FR18, FR19, FR20, FR21, FR22, FR23, FR27
+
+**Implementation notes:** FR27 (the low-stock callout) sits here rather than in Epic 2 because it renders on the Dashboard, which this epic builds. That avoids shipping a Dashboard twice. Recharts is not installed and is added here - it is one of only two permitted new dependencies. Every chart axis and tooltip formats money through `formatCurrency()`, and every chart is wrapped in `ChartPanel` so the loading and empty states are uniform. `StatCard` and `DateRangeBar` are created here.
+
+### Epic 5: Works at the counter, on a phone or tablet
+
+A cashier on a phone can navigate, add products, review the cart in a drawer, see the running total at all times, and complete a sale without ever hunting for the cart.
+
+**FRs covered:** FR35, FR36, FR37, FR38
+
+**Implementation notes:** this epic is last because it is the only place CAP-9 can be complete - FR37 stacks the Dashboard and Reports surfaces that Epic 4 creates, so a forward dependency would exist if it came earlier. Earliest epics should still respect the breakpoint rules from `EXPERIENCE.md` while building (tables scroll horizontally, one primary action per surface) so the retrofit here stays small and is not a rescue. This epic creates `CartDrawer` and the always-visible summary bar, collapses the nav to a hamburger drawer, and enforces the 768px and 1024px boundaries app-wide.
+
+### Out of scope for every epic
+
+Auth and role-based access (CAP-1) and shared types (CAP-8) are **shipped** - they get a verification story inside Epic 1, not a build epic. The component library (CAP-7) has no epic of its own by design: a "create reusable components" epic delivers no user value, so each new component is built inside the epic whose feature needs it, and Epic 1 handles the components that already exist. SPEC non-goals (print hardware, multi-store, procurement, barcode, payment gateway) and dark mode are excluded everywhere.
