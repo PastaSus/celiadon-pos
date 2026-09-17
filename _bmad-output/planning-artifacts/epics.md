@@ -491,3 +491,59 @@ So that the customer leaves with proof and the drawer has a paper trail.
 **When** a user opens and prints its receipt from POS or Transactions
 **Then** `ReceiptView` shows the store name from a single exported constant, line items, totals through `formatCurrency()`, payment method, and timestamp
 **And** printing uses browser print plus print CSS with no PDF library, and one consistent receipt layout serves both the post-sale and history paths (UX-DR12, UX-DR29)
+## Epic 4: See how the store is doing
+
+An owner or manager sees revenue over time, a daily/weekly/monthly toggle, the top products, the payment mix, the key numbers, and - in the same view - how many products are running low.
+
+**FRs covered:** FR18, FR19, FR20, FR21, FR22, FR23, FR27
+
+### Story 4.1: Install Recharts and chart the revenue trend
+
+As an owner,
+I want to see revenue over time with a daily, weekly, and monthly toggle,
+So that a slow Tuesday is visible instead of vibes.
+
+**Acceptance Criteria:**
+
+**Given** Recharts is not installed and no chart code exists
+**When** `recharts` is added as a dependency and the revenue chart ships inside `ChartPanel`
+**Then** the revenue line or area chart supports daily, weekly, and monthly aggregation with monthly as the default (FR18)
+**And** every axis and tooltip formats money through `formatCurrency()` with no raw numbers (FR19)
+**And** loading shows a skeleton and an empty range shows the empty state, never a blank chart (UX-DR10, UX-DR30)
+### Story 4.2: Show top products and payment mix
+
+As an owner,
+I want the top-selling products and the revenue split by payment method,
+So that restocking and register setup follow the numbers.
+
+**Acceptance Criteria:**
+
+**Given** the dashboard chart surface from Story 4.1
+**When** the top-products and payment-mix charts render for the selected range
+**Then** the top 5 products by revenue show rank, name, quantity, and revenue (FR20)
+**And** the payment mix shows cash, card, and mobile shares summing to 100 percent with a legend and values (FR21)
+### Story 4.3: Show the key numbers with a date range control
+
+As an owner,
+I want total revenue, transaction count, average sale, and items sold for a chosen period,
+So that the health of the store fits on one glanceable row.
+
+**Acceptance Criteria:**
+
+**Given** the dashboard from Stories 4.1-4.2
+**When** a user picks a range in `DateRangeBar` or one of the metric cards
+**Then** total revenue, transaction count, average sale value, and items sold render as `StatCard` tiles with label, value, and optional delta (FR22, UX-DR9)
+**And** the range control offers presets plus custom dates, defaults to 30 days, and drives every tile and chart on the page (FR23, UX-DR11)
+**And** every money value passes through `formatCurrency()`
+### Story 4.4: Call out low stock on the dashboard
+
+As an owner,
+I want to see which products are low or out without opening Inventory,
+So that one glance tells me what to reorder today.
+
+**Acceptance Criteria:**
+
+**Given** the dashboard from Stories 4.1-4.3 and the reorder levels from Epic 2
+**When** products fall at or below their reorder level
+**Then** the dashboard shows a low-stock callout listing the product, current quantity, and threshold, ordered with out-of-stock first (FR27)
+**And** the callout links into the filtered Inventory view, and hides itself when nothing is low
