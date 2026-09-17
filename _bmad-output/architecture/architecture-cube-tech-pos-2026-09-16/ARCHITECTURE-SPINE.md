@@ -124,6 +124,8 @@ graph TD
 | Auth token | Stored in `localStorage` via the helpers in `client/src/lib/api.ts`, sent as an `Authorization: Bearer` header. Not a cookie. |
 | Currency formatting | Always `formatCurrency()` from `client/src/lib/api.ts`. |
 | UI colors | Named palette tokens from `tailwind.config.js` (`brand`, `accent`, `teal`, `ink`). No raw `indigo-*`/`gray-*` classes in new code. |
+| Icons | `lucide-react` components only, `currentColor`, 16/20/24px, default 2px stroke. Emoji and Unicode glyphs are banned as icons; the `✕` in `Modal.tsx` is replaced by `<X />`. |
+| Emphasis | Size, weight, and color. No glow, neon, bloom, or colored shadow anywhere. |
 
 ## Stack
 
@@ -140,6 +142,7 @@ graph TD
 | Vite | ^5.4 | Build tool |
 | Tailwind CSS | ^3.4 | Styling |
 | Recharts | ^2.x | Dashboard / Reports charts - **not yet installed**; CAP-4 must add it to `client/package.json`. No other charting library. |
+| lucide-react | ^0.4xx | The only icon library - **not yet installed**; CAP-7 must add it. Icons are React components at 16/20/24px with `currentColor` and lucide's default stroke. No emoji, no Unicode glyphs, no inline SVG, no icon font, no second library. See DESIGN.md `## Icons`. |
 | React Router | ^6.26 | Client routing |
 | concurrently | ^8.2 | Dev orchestration |
 

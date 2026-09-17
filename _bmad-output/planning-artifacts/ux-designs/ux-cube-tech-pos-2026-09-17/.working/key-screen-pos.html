@@ -26,8 +26,6 @@
 </script>
 <style>
   body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  .glow    { box-shadow: 0 0 14px rgba(2, 240, 253, 0.55); }
-  .glow-sm { box-shadow: 0 0 8px rgba(2, 240, 253, 0.75); }
   .tabular { font-variant-numeric: tabular-nums; }
   .receipt { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 </style>
@@ -38,7 +36,7 @@
 <header class="bg-ink">
   <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
     <div class="flex items-center gap-2">
-      <span class="h-3 w-3 rounded-full bg-accent glow-sm"></span>
+      <span class="h-3 w-3 rounded-full bg-accent"></span>
       <span class="text-lg font-extrabold tracking-tight text-white">Cube Tech POS</span>
     </div>
     <nav class="hidden items-center gap-1 md:flex">
@@ -180,7 +178,7 @@
         <div class="rounded-b-lg bg-ink px-6 py-4">
           <div class="flex items-end justify-between">
             <span class="text-xs font-medium uppercase tracking-wider text-slate-400">Total</span>
-            <span class="tabular glow text-3xl font-extrabold text-accent">$41.99</span>
+            <span class="tabular text-3xl font-extrabold text-accent">$41.99</span>
           </div>
           <button class="mt-4 w-full rounded-lg bg-commit px-4 py-3 text-base font-semibold text-white focus:outline-none focus:ring-2 focus:ring-accent">
             Complete Sale
@@ -218,7 +216,7 @@
       <div class="mt-3 flex items-center justify-between rounded-2xl bg-ink px-4 py-3 ring-1 ring-white/10">
         <div>
           <p class="text-[10px] uppercase tracking-wider text-slate-400">3 items</p>
-          <p class="tabular glow text-xl font-extrabold text-accent">$41.99</p>
+          <p class="tabular text-xl font-extrabold text-accent">$41.99</p>
         </div>
         <button class="rounded-lg bg-commit px-4 py-2.5 text-sm font-semibold text-white">View cart</button>
       </div>
@@ -247,7 +245,7 @@
         </div>
       </div>
       <div class="flex items-center justify-between bg-ink px-5 py-4">
-        <span class="tabular glow text-2xl font-extrabold text-accent">$41.99</span>
+        <span class="tabular text-2xl font-extrabold text-accent">$41.99</span>
         <button class="rounded-lg bg-commit px-5 py-3 text-sm font-semibold text-white">Complete Sale</button>
       </div>
 
@@ -285,7 +283,7 @@
       <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Toasts</h3>
       <div class="space-y-3">
         <div class="flex items-center gap-3 rounded-lg bg-ink px-4 py-3 ring-1 ring-accent">
-          <span class="h-2 w-2 rounded-full bg-accent glow-sm"></span>
+          <span class="h-2 w-2 rounded-full bg-accent"></span>
           <span class="text-sm text-white">Sale completed - REC-1042</span>
         </div>
         <div class="flex items-center gap-3 rounded-lg bg-white px-4 py-3 ring-1 ring-red-200">
@@ -293,7 +291,47 @@
           <span class="text-sm text-slate-800">Not enough stock for USB-C Hub 7-in-1</span>
         </div>
       </div>
-      <p class="mt-3 text-xs text-slate-500">Success is a register chime on navy with the cyan edge, never a gray system note.</p>
+      <p class="mt-3 text-xs text-slate-500">Success is a register chime on navy with the cyan edge, never a gray system note. Flat color, no glow.</p>
+    </div>
+
+    <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">
+      <h3 class="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">Icons - lucide-react only</h3>
+
+      <div class="flex flex-wrap items-center gap-3">
+        <button class="flex items-center gap-2 rounded-lg bg-brand px-4 py-2 text-sm font-semibold text-white">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          Add Product
+        </button>
+        <button class="flex items-center gap-2 rounded-lg border border-line-strong bg-white px-4 py-2 text-sm font-semibold text-slate-800">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          Cancel
+        </button>
+        <button class="flex items-center gap-2 rounded-lg bg-commit px-4 py-2 text-sm font-semibold text-white">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V2h12v7"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+          Print
+        </button>
+      </div>
+
+      <div class="mt-4 flex items-center gap-3">
+        <button aria-label="Search products" class="flex h-11 w-11 items-center justify-center rounded-lg bg-canvas text-slate-600">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        </button>
+        <button aria-label="View cart" class="flex h-11 w-11 items-center justify-center rounded-lg bg-canvas text-slate-600">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        </button>
+        <button aria-label="Decrease quantity" class="flex h-11 w-11 items-center justify-center rounded-lg bg-canvas text-slate-600">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg>
+        </button>
+        <button aria-label="Increase quantity" class="flex h-11 w-11 items-center justify-center rounded-lg bg-canvas text-slate-600">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        </button>
+        <span class="flex items-center gap-2 text-xs text-slate-500">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          All categories
+        </span>
+      </div>
+
+      <p class="mt-3 text-xs text-slate-500">20px in buttons and 44px touch targets, 16px beside caption text, 2px stroke, always <span class="font-mono">currentColor</span>. No emoji, no Unicode glyphs like the current <span class="font-mono">&#10005;</span>, no inline SVG.</p>
     </div>
 
     <div class="rounded-lg bg-white p-6 shadow-sm ring-1 ring-line">

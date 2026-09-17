@@ -13,10 +13,10 @@ colors:
   primary-strong: '#0B5EA6' # pressed state, link hover
   primary-surface: '#D8EEFD' # selected segments, active chip wash
   primary-subtle: '#EBF6FE' # receipt total block, info wash panels
-  accent: '#02F0FD' # electric cyan - glow on dark chrome ONLY: logo mark, focus ring on navy, key numerals on dark bars. Never body text on white.
+  accent: '#02F0FD' # cyan - FLAT fill on dark navy chrome ONLY: logo mark, dark-surface focus ring, key numerals. No glow, no colored shadow. Never body text on white.
   accent-ink: '#07333D' # readable text on accent fills
   teal: '#3FE0D0' # secondary accent - chart series, progress fills
-  ring: '#1690E8' # focus ring on light surfaces (accent glow on dark)
+  ring: '#1690E8' # focus ring on light surfaces (flat cyan ring on dark)
   canvas: '#E8EDF3' # cool blue-gray page background
   surface: '#FFFFFF' # cards, tables, modals, nav sheets
   surface-muted: '#F5F8FB' # table head, modal detail blocks
@@ -96,17 +96,19 @@ spacing:
 
 Cube Tech POS is a single-store retail counter tool. The person using it is standing up, mid-transaction, often with a customer waiting, frequently on a tablet or a phone. The aesthetic posture follows from that: a dark-navy chrome that frames the work, high-contrast white work surfaces, one azure brand color that marks the live action, status color reserved for stock truth, and no decoration that competes with a price or a quantity.
 
-Aesthetic keywords: **utilitarian, legible at arm's length, cool chrome, honest status.** Square shows how a navy header anchors a register, Toast shows how one green can own every commit action, and Shopify POS shows how cool gray surfaces make products and prices the loudest thing on screen. This system takes all three: navy chrome, one azure for intent, deep-teal commit, slate work surfaces, and an electric-cyan glow that appears only on the dark chrome.
+Aesthetic keywords: **utilitarian, legible at arm's length, cool chrome, honest status.** Square shows how a navy header anchors a register, Toast shows how one green can own every commit action, and Shopify POS shows how cool gray surfaces make products and prices the loudest thing on screen. This system takes all three: navy chrome, one azure for intent, deep-teal commit, slate work surfaces, and flat cyan that appears only on the dark chrome.
 
 The brand color is `{colors.primary}` (azure). It marks exactly three things: the Cube Tech POS logotype, the active nav item, and the primary action on a surface. On the POS screen the commit action is `{colors.success}` (deep teal) instead, following Toast: "Complete Sale" ends a transaction rather than navigating within one, so it owns its own color.
 
-Everything else is cool neutral. Cards are `{colors.surface}` on a `{colors.canvas}` page, the nav bar is `{colors.ink}` dark navy, and dividers are `{colors.border}`. Nothing is tinted for taste, and there are no gradients, no accent flourishes, and no celebratory motion. `{colors.accent}` electric cyan appears only as a glow on the dark chrome - the logo mark, the cart total on the mobile bar - never as body text on white.
+Everything else is cool neutral. Cards are `{colors.surface}` on a `{colors.canvas}` page, the nav bar is `{colors.ink}` dark navy, and dividers are `{colors.border}`. Nothing is tinted for taste, and there are no gradients, no accent flourishes, and no celebratory motion. `{colors.accent}` cyan appears only as a flat fill on the dark chrome - the logo mark, the total numerals on the mobile bar - never as body text on white.
+
+**Nothing glows.** No neon, no bloom, no outer light, no colored shadow, no blurred halo behind a number. Emphasis on the navy chrome comes from flat cyan plus size and weight, not from emitted light. This is a retail tool, not a gaming rig: a shadow in this product is a neutral, short, subtle gray shadow that separates a card from the page, and nothing else.
 
 This product inherits its interaction patterns wholesale from the shipped library. `Button`, `Badge`, `Table`, `Modal`, `Toast`, and `LoadingSpinner` are the contract - their props and behaviors are canonical. **Their colors are not**: every `bg-indigo-*` and `text-gray-*` class migrates to the named palette in `tailwind.config.js` (`brand`, `accent`, `teal`, `ink`), so a primary button renders azure and body text renders slate. A new page composes the same components in the new colors; it does not invent new components. The tension this creates is deliberate: the product should read as one system built by one hand, because a cashier learns the vocabulary once and never re-learns it on a new screen.
 
 ## Colors
 
-Two color systems operate in this product, and they must not be confused with each other. The palette is electric cyan `{colors.accent}`, teal `{colors.teal}`, neutral light gray `{colors.border}`, and azure `{colors.primary}` - completed with a dark navy `{colors.ink}` for chrome, a cool blue-gray page `{colors.canvas}`, a slate text ramp, and amber/red reserved for stock truth. Cyan-on-white fails below large-headline sizes, so `{colors.accent}` never carries body text; it glows against the navy chrome instead.
+Two color systems operate in this product, and they must not be confused with each other. The palette is cyan `{colors.accent}`, teal `{colors.teal}`, neutral light gray `{colors.border}`, and azure `{colors.primary}` - completed with a dark navy `{colors.ink}` for chrome, a cool blue-gray page `{colors.canvas}`, a slate text ramp, and amber/red reserved for stock truth. Cyan-on-white fails below large-headline sizes, so `{colors.accent}` never carries body text; it sits flat on the navy chrome instead, and it is never glowing.
 
 **Brand azure is chrome and intent.** `{colors.primary}` fills primary buttons and the active nav pill (on navy chrome the active item is a filled azure pill with white text, which is also how Square's register marks the live tab). `{colors.primary-surface}` is the wash for selected segments and the active POS category chip. `{colors.ring}` draws the focus ring on light surfaces; on the navy chrome the focus ring is `{colors.accent}` cyan so it survives the dark background. Azure never means "good" or "bad" - it means "this is interactive" or "this is the one we are pointing at." A surface that uses azure for a status has made a mistake; that is what `Badge` tones are for.
 
@@ -121,7 +123,7 @@ Two color systems operate in this product, and they must not be confused with ea
 
 **The slate ramp does one job - separating foreground from background.** `{colors.text}` for headings and values, `{colors.text-strong}` for the emphasized cell in a table, `{colors.text-muted}` for labels, meta text, and empty states, `{colors.text-subtle}` for idle nav and secondary button text. Do not add a sixth step for a sixth purpose; pick the nearest existing one. Body text renders in slate because `text-gray-*` classes migrate to `text-slate-*` with the palette.
 
-**Avoid:** tinted panels used as decoration, azure for status, cyan body text on white (accent is glow-only), red for anything non-destructive, chart colors chosen per-chart to "look nicer," and hardcoded currency symbols anywhere in the UI. Money is rendered by `formatCurrency()` and nothing else.
+**Avoid:** tinted panels used as decoration, azure for status, cyan body text on white (accent is dark-chrome only), glow, neon, bloom or any colored shadow, red for anything non-destructive, chart colors chosen per-chart to "look nicer," and hardcoded currency symbols anywhere in the UI. Money is rendered by `formatCurrency()` and nothing else.
 
 **Reviewing this palette is a config change, not a redesign.** Every value here is a named token in `tailwind.config.js`, and every surface references tokens rather than literals. Adjusting a hue after seeing a built screen means editing one hex in one file; it does not mean revisiting layout, spacing, or component structure. That is deliberate, because the palette is the decision most likely to be revisited once the POS screen is real and the least likely to invalidate anything else.
 
@@ -162,7 +164,7 @@ Grid behavior, by surface:
 | Reports | Charts 2 per row, table full width | Everything stacks |
 | Inventory / Transactions / Stock Movements | Full-width table | Full-width table that scrolls horizontally |
 
-Card padding is `{spacing.card}` for a standalone card and `{spacing.gutter}` for a dense nested block (the detail panels inside a Modal). On wide screens a key number - the POS cart total, a Dashboard stat value, the mobile cart-bar total - sits on `{colors.ink}` navy rather than white, with an `{colors.accent}` cyan glow behind or beside it, so the money is the brightest thing on the surface the way a register total is the brightest thing on a Square terminal. Form fields stack vertically with `{spacing.gutter}` between fields and `{spacing.section}` before the action row, which is always right-aligned with the primary action rightmost. That is the existing Inventory and Transactions behavior, ratified.
+Card padding is `{spacing.card}` for a standalone card and `{spacing.gutter}` for a dense nested block (the detail panels inside a Modal). On wide screens a key number - the POS cart total, a Dashboard stat value, the mobile cart-bar total - sits on `{colors.ink}` navy rather than white, with the value in flat `{colors.accent}` cyan at `{typography.numeric-lg}` or larger, so the money reads first through size, weight, and color alone. No glow props it up. Form fields stack vertically with `{spacing.gutter}` between fields and `{spacing.section}` before the action row, which is always right-aligned with the primary action rightmost. That is the existing Inventory and Transactions behavior, ratified.
 
 Controls inside a row sit `{spacing.tight}` apart when they belong to one action (quantity stepper, cart line controls) and `{spacing.control}` apart when they are distinct actions (Cancel / Save).
 
@@ -171,6 +173,8 @@ Controls inside a row sit `{spacing.tight}` apart when they belong to one action
 Depth in this product is a two-level system, and it is already established in code.
 
 **Level 0 - the page.** `{colors.canvas}` filled, flat, no shadow. Content sits on it.
+
+**Shadows are functional and neutral - never decorative, never colored.** The only shadow in the product is a short, low-opacity gray shadow (`shadow-sm`, or `shadow-md` on the POS product tile's hover) that lifts a surface off the page. No shadow uses a color other than black or gray, no shadow has a large blur or spread, and no element is given a shadow to make it look important. A colored shadow is a glow with extra steps, and glows are banned.
 
 **Level 1 - the card.** `{colors.surface}` with a soft shadow and a `{rounded.lg}` corner. Cards, tables, and stat blocks all live here. This is the whole hierarchy: there is no Level 2 card, no nested elevation, and no "raised on hover" beyond the POS product tile's existing hover shadow, which signals a tappable target rather than a deeper layer. The nav bar is `{colors.ink}` navy and sits outside this system - chrome, not content - with a solid fill and no blur.
 
@@ -206,16 +210,38 @@ Borders are 1px `{colors.border}` for dividers and table rows, and `{colors.bord
 
 **New visual specs.** Each of these is added to `client/src/components/` and follows the inherited patterns exactly.
 
-- **SearchInput** - `{components.input}` with a leading search glyph at `{colors.text-muted}` inside the field, and a clear affordance at `{colors.text-muted}` that appears only when the field is non-empty. Same height and radius as the form inputs it sits beside, so a filter row reads as one line of controls. Focus uses `{colors.ring}`.
+- **SearchInput** - `{components.input}` with a leading lucide `Search` icon at `{colors.text-muted}` inside the field, and a lucide `X` clear button at `{colors.text-muted}` that appears only when the field is non-empty. Same height and radius as the form inputs it sits beside, so a filter row reads as one line of controls. Focus uses `{colors.ring}`.
 - **FilterSelect** - a native `select` wearing `{components.input}`, with the same height as `SearchInput`. Never a custom dropdown: the native control is faster on a tablet and needs no keyboard work.
 - **Category chips (POS)** - `{rounded.full}` pills at `{typography.caption}` scale. Inactive: `{colors.surface}` fill with `{colors.primary-strong}` text on a `{colors.primary-subtle}` wash row. Active: `{colors.primary}` fill with `{colors.surface}` text. Exactly one is active at a time, and the active chip is the only azure element in the grid's header area.
-- **CartDrawer** - `{components.cart-drawer}` panel rising from the bottom edge, full width on a phone, capped at a comfortable reading width on a large phone in landscape. Same scrim as `Modal`. A drag/close affordance at the top edge, cart contents as in the desktop cart, and a pinned footer on `{colors.ink}` navy holding the total in `{colors.accent}` cyan numerals with Complete Sale beside it, so the commit action never scrolls out of reach and the money glows the way a register total does.
+- **CartDrawer** - `{components.cart-drawer}` panel rising from the bottom edge, full width on a phone, capped at a comfortable reading width on a large phone in landscape. Same scrim as `Modal`. A drag/close affordance at the top edge, cart contents as in the desktop cart, and a pinned footer on `{colors.ink}` navy holding the total in flat `{colors.accent}` cyan numerals with Complete Sale beside it, so the commit action never scrolls out of reach and the total is the largest, heaviest number on the panel.
 - **PaymentMethodControl** - a three-segment control in a `{colors.primary-subtle}` wash with a `{rounded.lg}` container. The selected segment is a filled `{colors.primary}` azure pill with white text; unselected segments are `{colors.primary-strong}` text only. It sits directly above Complete Sale, so the choice reads as part of the commit rather than a separate step.
 - **StatCard** - `{components.stat-card}`, label at `{typography.caption}` in `{colors.text-muted}` with the tone dot at `{rounded.full}` to its left, value at `{typography.numeric-lg}` in `{colors.text}` with tabular figures. The revenue card carries a `{colors.ink}` navy value band so the day's money reads first on the Dashboard; the low-stock card's value stays in `{colors.warning-text}` amber so it never borrows the commit color. The dot colors come from `{colors.chart-1}` through `{colors.chart-5}` for consistency with the charts below.
 - **ChartPanel** - `{components.chart-panel}` holding a title at `{typography.section}` and the chart beneath it. Grid lines in `{colors.border}`, axis labels at `{typography.caption}` in `{colors.text-muted}`, no vertical grid lines, and no chart junk (no 3D, no gradients, no drop shadows on series). Tooltips format money through `formatCurrency()`. Teal `{colors.teal}` is the bar-and-area color; thin lines and small text never use it.
 - **DateRangeBar** - two native date inputs using `{components.input}`, followed by preset chips styled exactly like the POS category chips. The active preset is a filled azure pill; "Custom" lights up when the user types into an input directly.
 - **ReceiptView** - a `{components.receipt}` block on the print surface, monospace at `{typography.receipt}`, with the store name centered at the top, a divider rule of dashes between header, line items, and totals, and the total row emphasized. On screen it sits on `{colors.canvas}` inside a narrow centered column so the width matches what will print; in print it is the only thing on the page.
 - **EmptyState** - one sentence at `{typography.body}` in `{colors.text-muted}`, centered, with an optional single primary action beneath. It replaces the ad-hoc inline paragraph currently on the POS grid so every empty surface reads the same.
+
+## Icons
+
+**One library: `lucide-react`. No exceptions.** It is **not installed yet** - adding it to `client/package.json` is part of CAP-7. Until then the product has no icon set at all: the only icon-like element in shipped code is a `✕` text glyph in `Modal.tsx`, which becomes `<X />`.
+
+The ban list, because this is how a product ends up looking unserious:
+
+- **No emoji as an icon.** Not in buttons, nav, empty states, toasts, or the receipt. An emoji renders differently on every OS and reads as decoration.
+- **No Unicode glyph as an icon.** No `✕`, `★`, `→`, `✓`, or `•` standing in for a control. Glyphs inherit the font's metrics rather than the icon grid, so they never align with anything.
+- **No hand-written inline `<svg>`,** no icon font, and no second icon library mixed in.
+
+Rules that make lucide icons read as one family:
+
+- **Size:** 16px beside `{typography.caption}` text, 20px in buttons and inputs, 24px for standalone nav and card decoration. An icon matches the text it sits with and is never scaled to match a heading.
+- **Stroke:** lucide's default 2px, dropping to 1.75 only at 24px and above so a large icon does not read as heavy. No per-icon overrides - mixed stroke weights are the fastest way to look inconsistent.
+- **Color:** always `currentColor`, inherited from the parent's text color, so an icon inside a button takes that button's foreground. An icon never carries a color its neighboring text does not.
+- **Alignment:** `{spacing.tight}` between icon and label, vertically centered. An icon-only button is at least 44px on touch surfaces and always carries an `aria-label`.
+- **Meaning:** an icon reinforces a label, it does not replace one - except for the universally understood few: close, quantity steppers, cart trigger. Those carry `aria-label`s.
+
+The icons the six capabilities actually need, and nothing beyond: `Search` and `X` (SearchInput), `Plus` / `Minus` (quantity steppers, Add Product), `ShoppingCart` (cart drawer trigger), `X` (Modal and drawer close), `ChevronDown` (FilterSelect), `Calendar` (DateRangeBar), `Printer` (receipt), `AlertTriangle` (low-stock callout), `TrendingUp` / `TrendingDown` (revenue delta), `PackageX` (out of stock), `LogOut` (sign out). Payment method segments stay **text-only** - three icons there would compete with the labels for no gain.
+
+Emoji are banned in text as well, not just in icons - the voice rules in `EXPERIENCE.md` already prohibit them in system messages, and the receipt stays plain text.
 
 ## Do's and Don'ts
 
@@ -230,5 +256,6 @@ Borders are 1px `{colors.border}` for dividers and table rows, and `{colors.bord
 | Keep one primary action per surface | Two primary buttons, or a disabled commit button where the action is impossible |
 | Let tables scroll horizontally on narrow viewports | Rewrite a table as cards, or drop columns on mobile |
 | Keep toasts above modals (`z-[60]`) | Put a drawer or modal above the toast layer |
-| Use cyan only as glow on navy chrome (logo, key numerals, dark focus ring) | Set body text, labels, or thin lines in cyan on white |
+| Use flat cyan on navy chrome only (logo mark, key numerals, dark focus ring) | Set body text, labels, or thin lines in cyan on white |
+| Let size, weight, and color carry emphasis on navy | Add glow, neon, bloom, or any colored shadow to make a number pop |
 | Let the empty state say what is true | Add a create action to a filtered-to-nothing state |

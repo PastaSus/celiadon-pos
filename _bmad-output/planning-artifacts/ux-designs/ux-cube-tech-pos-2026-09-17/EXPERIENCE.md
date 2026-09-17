@@ -129,6 +129,7 @@ The floor is what makes the product usable at a counter with a queue - not a com
 - **The receipt prints legibly.** Print output is high contrast, does not depend on color to convey anything (the payment method is text, not a colored chip), and fits 80mm without horizontal clipping.
 - **Color is never the only signal.** Stock state always shows the number alongside the badge; the active nav item carries a surface fill as well as color; chart series carry a legend or label. A user who cannot distinguish yellow from red still gets the count.
 - **Tap targets are at least 44px on the touch surfaces** (POS tiles, steppers, drawer controls, payment segments). This is the one place where a counter device, not a desktop mouse, sets the floor.
+- **Icon-only controls are labeled.** Every icon-only button - cart drawer trigger, Modal and CartDrawer close, quantity steppers, Print - carries an `aria-label`, and icons that merely decorate a button's own text are `aria-hidden="true"`. The existing `✕` glyph in `Modal.tsx` has an `aria-label` already, which is the right instinct; the glyph itself is the problem, not the label, because a screen reader may announce it as "multiplication sign."
 
 ## Responsive & Platform
 
