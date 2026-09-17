@@ -127,6 +127,8 @@ Two color systems operate in this product, and they must not be confused with ea
 
 **Reviewing this palette is a config change, not a redesign.** Every value here is a named token in `tailwind.config.js`, and every surface references tokens rather than literals. Adjusting a hue after seeing a built screen means editing one hex in one file; it does not mean revisiting layout, spacing, or component structure. That is deliberate, because the palette is the decision most likely to be revisited once the POS screen is real and the least likely to invalidate anything else.
 
+**See it rendered:** [`mockups/pos-key-screen.html`](mockups/pos-key-screen.html) applies these tokens to the POS surface - desktop cart column, mobile drawer and bottom bar, plus a vocabulary strip for buttons, badges, toasts, chart series, and icons. Open it in a browser to review a color decision without reading hex codes. It is a flat-color, no-glow reference and it is not a layout contract; this file wins on any conflict.
+
 ## Typography
 
 The system font stack ships with Tailwind and is inherited as-is. No font is downloaded, no font file is added, and no display face is introduced - the product's type has to render instantly on a store tablet with indifferent wifi.
