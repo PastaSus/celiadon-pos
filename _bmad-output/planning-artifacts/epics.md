@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2]
+stepsCompleted: [1, 2, 3]
 inputDocuments:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
   - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
@@ -205,7 +205,7 @@ FR37: Epic 5 - Dashboard and Reports stack to one column; tables scroll horizont
 FR38: Epic 5 - Cart survives filtering and drawer open/close; only a sale or removal empties it
 ```
 
-**Nothing is unmapped.** All 38 FRs land in an epic. FR1-FR7 and FR34 are verification-only because CAP-1 and CAP-8 already ship; FR33 is satisfied across Epic 1 (existing components) and the feature epics (new ones).
+**Nothing is unmapped.** All 38 FRs land in an epic. FR1-FR7 and FR34 are verification-only because CAP-1 and CAP-8 already ship; FR33 is satisfied in Epic 1 across its six stories (each story carries the no-new-inline-implementation rule appropriate to what it touches, and Story 1.6 verifies the whole).
 
 UX Design Requirements coverage, all 32 mapped:
 
