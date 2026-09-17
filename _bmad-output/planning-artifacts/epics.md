@@ -547,3 +547,56 @@ So that one glance tells me what to reorder today.
 **When** products fall at or below their reorder level
 **Then** the dashboard shows a low-stock callout listing the product, current quantity, and threshold, ordered with out-of-stock first (FR27)
 **And** the callout links into the filtered Inventory view, and hides itself when nothing is low
+## Epic 5: Works at the counter, on a phone or tablet
+
+A cashier on a phone can navigate, add products, review the cart in a drawer, see the running total at all times, and complete a sale without ever hunting for the cart.
+
+**FRs covered:** FR35, FR36, FR37, FR38
+
+### Story 5.1: Collapse the nav to a hamburger on small screens
+
+As a cashier on a phone,
+I want the navigation tucked behind a hamburger that opens a drawer,
+So that the full menu fits a narrow screen without losing any route.
+
+**Acceptance Criteria:**
+
+**Given** the navy `ink` nav chrome from Epic 1 renders as a full bar on desktop
+**When** the viewport narrows below the mobile breakpoint
+**Then** the nav collapses to a hamburger that opens a drawer listing exactly the same role-filtered routes as desktop (FR35)
+**And** the drawer traps focus, closes on Escape and backdrop tap, and returns focus to the hamburger (UX-DR21)
+### Story 5.2: Move the cart into a drawer with an always-visible total
+
+As a cashier on a phone,
+I want the cart in a drawer with the item count and total always visible,
+So that I can review and complete a sale without hunting for the cart.
+
+**Acceptance Criteria:**
+
+**Given** the POS cart renders as a side panel that crowds out products below 1024px
+**When** the viewport is below 1024px and the cart is opened from the fixed summary bar
+**Then** `CartDrawer` slides in with the line items, quantity controls, and Complete Sale action, while the summary bar always shows item count and total (FR36, UX-DR7)
+**And** the drawer traps focus, closes on Escape and backdrop tap, and the totals use `accent` flat on navy at heavier weight with no glow
+### Story 5.3: Stack every surface at the tablet and phone breakpoints
+
+As a cashier on a tablet,
+I want every page to stack cleanly with no horizontal page scroll and one clear primary action,
+So that Dashboard, Reports, Inventory, and Transactions all work at the counter.
+
+**Acceptance Criteria:**
+
+**Given** the pages from Epics 1-4 with desktop-first layouts
+**When** the viewport crosses 768px and 1024px
+**Then** grids stack to one column where specified, tables scroll horizontally inside their container with no page-level sideways scroll, and each surface keeps exactly one primary action visible (FR37, UX-DR21)
+**And** the Dashboard and Reports surfaces created in Epic 4 stack without breaking their charts
+### Story 5.4: Keep the cart alive across filtering and drawer toggles
+
+As a cashier,
+I want the cart to survive product filtering and drawer open-close cycles,
+So that narrowing the catalog mid-sale never loses the customer's items.
+
+**Acceptance Criteria:**
+
+**Given** a cart with items on POS at any viewport
+**When** the user filters the product list or opens and closes the cart drawer
+**Then** the cart contents, quantities, and totals are unchanged, and only completing the sale or removing items empties it (FR38)
