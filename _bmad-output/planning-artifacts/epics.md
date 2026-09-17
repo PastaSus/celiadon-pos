@@ -436,3 +436,58 @@ So that a quantity on the shelf can always be explained.
 **Then** each movement records product, quantity delta, movement type, timestamp, user, and optional note (FR29)
 **And** the movements list shows the newest first with product, delta, type, who, when, and note, filterable by product
 **And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
+## Epic 3: Take the money, and prove it
+
+A cashier records how the customer paid, a sale either fully succeeds or fully rolls back, and any sale - today's or last week's - can be printed as a receipt.
+
+**FRs covered:** FR14, FR15, FR16, FR17, FR28, FR30, FR31, FR32
+
+### Story 3.1: Select the payment method at checkout
+
+As a cashier,
+I want to record whether the customer paid cash, by card, or by mobile payment,
+So that the register totals can be reconciled by payment type at close.
+
+**Acceptance Criteria:**
+
+**Given** the sale payload already carries a `payment_method` field validated server-side, with zero client usage
+**When** a cashier picks a method in `PaymentMethodControl` and completes the sale
+**Then** every recorded sale carries exactly one valid payment method and the API rejects an invalid one (FR14, FR15)
+**And** the control is a segmented single-select defaulting to cash, text-labeled, never emoji (FR16, UX-DR8)
+**And** the Transactions list can be filtered by payment method (FR17)
+### Story 3.2: Complete the sale atomically with refresh
+
+As a cashier,
+I want the sale, its stock deduction, and its movement rows to commit as one unit,
+So that a failed sale never leaves the shelf count and the receipt disagreeing.
+
+**Acceptance Criteria:**
+
+**Given** `routes/sales.ts` already wraps sale creation in BEGIN, COMMIT, ROLLBACK with client release
+**When** a sale is completed or fails
+**Then** a sale that lacks sufficient stock is rejected and rolled back entirely with no partial write (FR28)
+**And** the POS clears the cart, refreshes product stock, and shows a success toast on completion, or an error toast naming the failure with the cart kept intact on rejection (UX-DR23, UX-DR24)
+### Story 3.3: Filter and page the transaction history
+
+As a cashier,
+I want to find a past sale by date or payment method without scrolling forever,
+So that a return or a question can be answered at the counter.
+
+**Acceptance Criteria:**
+
+**Given** the Transactions page lists sales newest-first with no date or payment filter
+**When** a user filters by date or payment method, or pages through results
+**Then** the list filters by a single calendar day defaulting to today (FR30), by payment method including all (FR31), and pages without full reloads (FR32)
+**And** the empty state names the active filters instead of showing a blank table
+### Story 3.4: View and print the receipt
+
+As a cashier,
+I want to show and print a receipt for any sale with a store name, lines, totals, method, and timestamp,
+So that the customer leaves with proof and the drawer has a paper trail.
+
+**Acceptance Criteria:**
+
+**Given** a completed sale with lines, totals, payment method, and timestamp
+**When** a user opens and prints its receipt from POS or Transactions
+**Then** `ReceiptView` shows the store name from a single exported constant, line items, totals through `formatCurrency()`, payment method, and timestamp
+**And** printing uses browser print plus print CSS with no PDF library, and one consistent receipt layout serves both the post-sale and history paths (UX-DR12, UX-DR29)
