@@ -264,3 +264,104 @@ A cashier on a phone can navigate, add products, review the cart in a drawer, se
 ### Out of scope for every epic
 
 Auth and role-based access (CAP-1) and shared types (CAP-8) are **shipped** - they get a verification story inside Epic 1, not a build epic. The component library (CAP-7) has no epic of its own by design: a "create reusable components" epic delivers no user value, so each new component is built inside the epic whose feature needs it, and Epic 1 handles the components that already exist. SPEC non-goals (print hardware, multi-store, procurement, barcode, payment gateway) and dark mode are excluded everywhere.
+
+---
+
+## Epic 1: The product looks and behaves like one app
+
+Every shipped surface uses the azure/teal/cyan system on navy chrome, one icon library, and an accessibility floor that holds everywhere. This is the retrofit pass that must land before feature work, because the palette migration rewrites the same classes across all 6 components, all 5 pages, and `App.tsx`.
+
+**UX-DRs covered:** UX-DR1, UX-DR2, UX-DR3, UX-DR13, UX-DR15, UX-DR16, UX-DR17, UX-DR18, UX-DR19, UX-DR20, UX-DR22, UX-DR25, UX-DR27, UX-DR28, UX-DR31, UX-DR32
+**FRs covered:** FR1-FR7, FR33, FR34 (verification - CAP-1 and CAP-8 are shipped)
+### Story 1.1: Adopt the palette tokens in the Tailwind config
+
+As a developer,
+I want the azure/teal/cyan palette defined as named tokens in `tailwind.config.js`,
+So that every surface references a token instead of a raw hex and a palette change stays a one-file edit.
+
+**Acceptance Criteria:**
+
+**Given** `client/tailwind.config.js` currently has an empty `theme.extend`
+**When** the palette is added under `theme.extend.colors`
+**Then** the tokens `brand`, `accent`, `teal`, `commit`, `ink`, `canvas`, `panel`, and `line` all resolve as Tailwind utilities with the exact hex values in `DESIGN.md` frontmatter, so the config and the contract cannot drift
+**And** `npm run build` succeeds with no new warnings
+### Story 1.2: Install lucide-react and replace the close glyph
+
+As a cashier,
+I want interface controls to use a real icon set,
+So that buttons and controls look like one product instead of mixing fonts and symbols.
+
+**Acceptance Criteria:**
+
+**Given** `client/package.json` has no icon library and `Modal.tsx` renders a text glyph as its close control
+**When** `lucide-react` is added as a dependency and that glyph is replaced with the `X` icon component
+**Then** the Modal close control renders the lucide `X` at 20px with 2px stroke and `currentColor`
+**And** the control keeps its `aria-label="Close"` and is at least 44px on touch surfaces
+**And** no emoji, Unicode glyph, hand-written inline svg element, icon font, or second icon library exists anywhere in `client/src`
+**And** `npm run build` succeeds and the Modal still opens and closes
+**And** no new raw hex value or hardcoded `bg-[#...]` arbitrary class is introduced
+### Story 1.3: Migrate the shared components to the palette
+
+As a cashier,
+I want every shared control to use the same colors,
+So that the buttons, badges, tables, and toasts on one screen agree with each other.
+
+**Acceptance Criteria:**
+
+**Given** the six shared components use raw indigo and gray classes
+**When** each component's classes are replaced with the named tokens from Story 1.1
+**Then** `Button` primary renders `brand` azure, the success variant renders `commit` deep teal, danger keeps a red fill, secondary renders `line` gray with `ink` text, and every hover and focus variant is mapped
+**And** `Badge` keeps its existing variant names but their fills re-map to the UX-DR13 meanings (green is commit-surface for in-stock, yellow is amber for low, red for out-of-stock, blue is azure-wash, gray is slate)
+**And** `Table` uses the muted surface for the head row and `line` for row dividers, and still scrolls horizontally on narrow screens
+**And** no raw indigo or gray utility class remains in any of the six component files
+**And** no glow, neon, bloom, or colored shadow is introduced anywhere (UX-DR15)
+**And** every component's public props and behavior are unchanged, so no page needs editing to keep working
+**And** `npm run build` succeeds
+### Story 1.4: Migrate the pages and app shell to the palette
+
+As a cashier,
+I want every page and the nav chrome to use the same visual system as the components,
+So that the product stops being two visual systems wearing one name.
+
+**Acceptance Criteria:**
+
+**Given** `App.tsx` and all 5 pages still use raw indigo and gray classes after Story 1.3
+**When** each file's classes are replaced with the named tokens from Story 1.1
+**Then** the nav uses the navy `ink` chrome with the cyan `accent` logo mark, the active route shows the azure `brand` pill, and inactive items dim on hover without changing hue
+**And** the POS numerals and cart totals use `accent` flat on navy at heavier weight, never glow (UX-DR16)
+**And** stock badges everywhere render through `stockTone()` - green commit-surface, amber, red - as the single stock rule (UX-DR13)
+**And** no raw indigo or gray utility class remains in `App.tsx` or any page
+**And** no glow, neon, bloom, or colored shadow is introduced anywhere (UX-DR15)
+**And** role-filtered nav, `ProtectedRoute`, and all route behavior are unchanged
+**And** `npm run build` succeeds
+### Story 1.5: Hold the accessibility floor on every shipped surface
+
+As a keyboard-only user,
+I want every control reachable and announced with visible focus and honest states,
+So that the retrofit does not ship a prettier product that fewer people can use.
+
+**Acceptance Criteria:**
+
+**Given** the migrated components and pages from Stories 1.3-1.4
+**When** the app is used keyboard-only and with a screen reader
+**Then** every interactive element is reachable by keyboard with a visible focus ring, icon-only buttons carry discernible text, and touch targets are at least 44px (UX-DR28)
+**And** numeric iconography, hierarchy, and red-asterisk-required conventions match EXPERIENCE.md on every form (UX-DR27)
+**And** loading, empty, and error states follow the uniform patterns - never a blank table or chart - on every shipped surface (UX-DR17, UX-DR18, UX-DR19, UX-DR20)
+**And** dense tables announce their context with region role, label, and column scope (UX-DR22)
+**And** toasts follow the navy-with-cyan-edge treatment and dismiss correctly (UX-DR25)
+**And** light body text on `canvas` or `panel` meets the 4.5 to 1 contrast floor (UX-DR31), and all numerals use tabular figures (UX-DR32)
+### Story 1.6: Prove auth, roles, and shared types still hold after the retrofit
+
+As an owner,
+I want proof that the visual retrofit broke nothing it touched,
+So that login, role filtering, and the API contracts survive the mass class rewrite.
+
+**Acceptance Criteria:**
+
+**Given** the palette migration touched `App.tsx`, the component library, and every page
+**When** the app is exercised end to end after Stories 1.1-1.5
+**Then** unauthenticated visitors reach only Login and every other route redirects there with no valid JWT (FR1)
+**And** correct credentials sign in, wrong ones are rejected, logout clears the session, and only admins reach user registration (FR2-FR5)
+**And** cashiers see only POS and Transactions, managers additionally see Inventory, admins see everything (FR6), with no route or nav item leaking across roles
+**And** the client imports `Product`, `Sale`, and related types from `shared/types.ts` with no local re-declaration (FR33), and every displayed price passes through `formatCurrency()` (FR34)
+**And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
