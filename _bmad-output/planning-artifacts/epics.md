@@ -365,3 +365,74 @@ So that login, role filtering, and the API contracts survive the mass class rewr
 **And** cashiers see only POS and Transactions, managers additionally see Inventory, admins see everything (FR6), with no route or nav item leaking across roles
 **And** the client imports `Product`, `Sale`, and related types from `shared/types.ts` with no local re-declaration (FR33), and every displayed price passes through `formatCurrency()` (FR34)
 **And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
+## Epic 2: Organize the catalog, find anything, know what is low
+
+A manager groups products into categories, a cashier finds any product by typing part of its name, filters by category and stock, and sees exactly why a quantity changed.
+
+**FRs covered:** FR8, FR9, FR10, FR11, FR12, FR13, FR24, FR25, FR26, FR29
+
+### Story 2.1: Build the category CRUD API and UI
+
+As a manager,
+I want to create, rename, and delete product categories,
+So that the catalog stays organized as new product lines arrive.
+
+**Acceptance Criteria:**
+
+**Given** the `categories` table already exists with no routes and no UI
+**When** a manager creates, renames, or deletes a category
+**Then** categories are listed from the API ordered alphabetically (FR8)
+**And** creating or renaming with a blank or duplicate name is rejected with a clear error (FR9)
+**And** the category manager UI uses `CategoryChips` and `FilterSelect` patterns consistent with the UX contract
+### Story 2.2: Search products by name on Inventory and POS
+
+As a cashier,
+I want to type part of a product name and see matching products instantly,
+So that I stop scrolling a long catalog during a sale.
+
+**Acceptance Criteria:**
+
+**Given** no search exists anywhere in any route
+**When** a user types a query in `SearchInput` on Inventory or POS
+**Then** results match case-insensitively and return in under 200ms (FR10)
+**And** clearing the query restores the full list, and a query with no matches shows the empty state instead of a blank list (FR11)
+**And** `SearchInput` debounces input and shows a clear control consistent with the UX contract (UX-DR4)
+**And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
+### Story 2.3: Filter by category and stock status
+
+As a cashier,
+I want to filter the product list by category and by stock status including a low-stock-only view,
+So that I can answer what is available and what needs attention without leaving the list.
+
+**Acceptance Criteria:**
+
+**Given** the product list from Story 2.2
+**When** a user picks a category or a stock status filter
+**Then** the list filters by `category_id` and by stock status with all, in-stock, low-stock, and out-of-stock states (FR12, FR13)
+**And** filters apply live with a visible clear action, and combined search plus filters that match nothing show the empty state (UX-DR26)
+**And** the filter controls use `FilterSelect` and `CategoryChips` (UX-DR5, UX-DR6)
+### Story 2.4: Manage per-product reorder levels with stock badges
+
+As a manager,
+I want to set a low-stock threshold per product and see the status at a glance,
+So that fast sellers get attention before they run out.
+
+**Acceptance Criteria:**
+
+**Given** `products.reorder_level` already exists in the schema with no UI
+**When** a manager edits a product's reorder level
+**Then** the threshold is saved per product with a sensible default for products never edited (FR24, FR25)
+**And** every product row renders its stock through `stockTone()` - green commit-surface, amber, red - as the single stock rule with no competing badge (FR26, UX-DR14)
+### Story 2.5: Record and list stock movements
+
+As a manager,
+I want every stock change recorded with who did it, why, and when,
+So that a quantity on the shelf can always be explained.
+
+**Acceptance Criteria:**
+
+**Given** the `stock_movements` table already exists with no routes and no UI
+**When** restocks, manual edits, and sale deductions occur
+**Then** each movement records product, quantity delta, movement type, timestamp, user, and optional note (FR29)
+**And** the movements list shows the newest first with product, delta, type, who, when, and note, filterable by product
+**And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
