@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { X } from 'lucide-react';
 
 interface ModalProps {
   open: boolean;
@@ -20,10 +21,10 @@ export default function Modal({ open, title, onClose, children, maxWidth = 'max-
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 flex items-center justify-center min-h-[44px] min-w-[44px]"
             aria-label="Close"
           >
-            ✕
+            <X size={20} aria-hidden="true" />
           </button>
         </div>
         {children}
