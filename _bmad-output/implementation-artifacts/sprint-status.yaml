@@ -1,0 +1,50 @@
+# Sprint status - cube-tech-pos
+# Generated 2026-09-18 by bmad-sprint-planning (manual pass - the deterministic generator
+# script is not present in this install). Readiness gate: PASS, after the FR/UX-DR citation
+# reconciliation in epics.md shipped in the same change.
+# Story keys are matched by their first two numeric segments (epic-story); epics as epic-<n>.
+# Statuses: backlog | in-progress | review | done
+# bmad-build sets a story to in-progress on start and review on present (sync-sprint-status).
+
+generated: 2026-09-18
+source: _bmad-output/planning-artifacts/epics.md
+last_updated: 2026-09-18
+
+development_status:
+  # Epic 1: The product looks and behaves like one app
+  epic-1: backlog
+  1-1-adopt-palette-tokens: backlog
+  1-2-install-lucide-react: backlog
+  1-3-migrate-components-palette: backlog
+  1-4-migrate-pages-palette: backlog
+  1-5-accessibility-floor: backlog
+  1-6-post-retrofit-verification: backlog
+
+  # Epic 2: Organize the catalog, find anything, know what is low
+  epic-2: backlog
+  2-1-category-crud: backlog
+  2-2-product-search: backlog
+  2-3-category-stock-filters: backlog
+  2-4-reorder-levels-badges: backlog
+  2-5-stock-movements: backlog
+
+  # Epic 3: Take the money, and prove it
+  epic-3: backlog
+  3-1-payment-method: backlog
+  3-2-atomic-sale: backlog
+  3-3-transaction-filters: backlog
+  3-4-receipt-view-print: backlog
+
+  # Epic 4: See how the store is doing
+  epic-4: backlog
+  4-1-recharts-revenue-trend: backlog
+  4-2-top-products-payment-mix: backlog
+  4-3-key-metrics-date-range: backlog
+  4-4-low-stock-callout: backlog
+
+  # Epic 5: Works at the counter, on a phone or tablet
+  epic-5: backlog
+  5-1-hamburger-nav: backlog
+  5-2-cart-drawer: backlog
+  5-3-responsive-stacking: backlog
+  5-4-cart-persistence: backlog

@@ -127,7 +127,7 @@ The UX contract is a first-class input. Every item below is specific enough to c
 
 ```
 UX-DR1: Implement the named palette tokens in client/tailwind.config.js theme.extend: brand (azure #1690E8 + hover/strong/surface/subtle), accent (cyan #02F0FD + accent-ink), teal (#3FE0D0), commit (deep teal #0B7E71 + hover), ink (navy #0A1929), canvas (#E8EDF3), panel (#F5F8FB), line (#E0E0E0 + strong), and the slate text ramp. No surface in the app may reference a raw hex.
-UX-DR2: HIGH RISK OF BEING FORGOTTEN - migrate every shipped raw color class to the named tokens: bg-indigo-*, text-indigo-*, ring-indigo-*, border-indigo-*, bg-gray-*, text-gray--*, border-gray-*, and their hover variants, across all 6 shipped components (Badge, Button, LoadingSpinner, Modal, Table, Toast) and all 5 pages (POS, Inventory, Dashboard, Transactions, Login) plus App.tsx. Until this lands the product runs two visual systems at once.
+UX-DR2: HIGH RISK OF BEING FORGOTTEN - migrate every shipped raw color class to the named tokens: bg-indigo-*, text-indigo-*, ring-indigo-*, border-indigo-*, bg-gray-*, text-gray-*, border-gray-*, and their hover variants, across all 6 shipped components (Badge, Button, LoadingSpinner, Modal, Table, Toast) and all 5 pages (POS, Inventory, Dashboard, Transactions, Login) plus App.tsx. Until this lands the product runs two visual systems at once.
 UX-DR3: HIGH RISK OF BEING FORGOTTEN - add lucide-react to client/package.json and replace the Unicode glyph currently used as the Modal close button with the lucide X component. Ban emoji, Unicode glyphs, hand-written inline SVG, icon fonts, and any second icon library. Icons render at 16px beside caption text, 20px in buttons and inputs, 24px standalone; 2px stroke (1.75 only at 24px+); always currentColor.
 UX-DR4: New component SearchInput - debounced 200ms, case-insensitive, leading lucide Search icon, lucide X clear button that appears only when the field is non-empty, Escape clears the field, no submit button, result count updates in place. Used by Inventory and Stock Movements.
 UX-DR5: New component FilterSelect - a native select styled to match inputs, first option always "All categories" or "All types" and selected by default, combines with search as AND (never OR). Used by Inventory and Stock Movements.
@@ -311,7 +311,7 @@ So that the buttons, badges, tables, and toasts on one screen agree with each ot
 **Given** the six shared components use raw indigo and gray classes
 **When** each component's classes are replaced with the named tokens from Story 1.1
 **Then** `Button` primary renders `brand` azure, the success variant renders `commit` deep teal, danger keeps a red fill, secondary renders `line` gray with `ink` text, and every hover and focus variant is mapped
-**And** `Badge` keeps its existing variant names but their fills re-map to the UX-DR13 meanings (green is commit-surface for in-stock, yellow is amber for low, red for out-of-stock, blue is azure-wash, gray is slate)
+**And** `Badge` keeps its existing variant names but their fills re-map to the UX-DR14 meanings (green is commit-surface for in-stock, yellow is amber for low, red for out-of-stock, blue is azure-wash, gray is slate)
 **And** `Table` uses the muted surface for the head row and `line` for row dividers, and still scrolls horizontally on narrow screens
 **And** no raw indigo or gray utility class remains in any of the six component files
 **And** no glow, neon, bloom, or colored shadow is introduced anywhere (UX-DR15)
@@ -328,8 +328,8 @@ So that the product stops being two visual systems wearing one name.
 **Given** `App.tsx` and all 5 pages still use raw indigo and gray classes after Story 1.3
 **When** each file's classes are replaced with the named tokens from Story 1.1
 **Then** the nav uses the navy `ink` chrome with the cyan `accent` logo mark, the active route shows the azure `brand` pill, and inactive items dim on hover without changing hue
-**And** the POS numerals and cart totals use `accent` flat on navy at heavier weight, never glow (UX-DR16)
-**And** stock badges everywhere render through `stockTone()` - green commit-surface, amber, red - as the single stock rule (UX-DR13)
+**And** the POS numerals and cart totals use `accent` flat on navy at heavier weight, never glow (UX-DR15, UX-DR31)
+**And** stock badges everywhere render through `stockTone()` - green commit-surface, amber, red - as the single stock rule (UX-DR14)
 **And** no raw indigo or gray utility class remains in `App.tsx` or any page
 **And** no glow, neon, bloom, or colored shadow is introduced anywhere (UX-DR15)
 **And** role-filtered nav, `ProtectedRoute`, and all route behavior are unchanged
@@ -344,12 +344,13 @@ So that the retrofit does not ship a prettier product that fewer people can use.
 
 **Given** the migrated components and pages from Stories 1.3-1.4
 **When** the app is used keyboard-only and with a screen reader
-**Then** every interactive element is reachable by keyboard with a visible focus ring, icon-only buttons carry discernible text, and touch targets are at least 44px (UX-DR28)
-**And** numeric iconography, hierarchy, and red-asterisk-required conventions match EXPERIENCE.md on every form (UX-DR27)
-**And** loading, empty, and error states follow the uniform patterns - never a blank table or chart - on every shipped surface (UX-DR17, UX-DR18, UX-DR19, UX-DR20)
-**And** dense tables announce their context with region role, label, and column scope (UX-DR22)
-**And** toasts follow the navy-with-cyan-edge treatment and dismiss correctly (UX-DR25)
-**And** light body text on `canvas` or `panel` meets the 4.5 to 1 contrast floor (UX-DR31), and all numerals use tabular figures (UX-DR32)
+**Then** every interactive element is reachable by keyboard with a visible focus ring, icon-only buttons carry discernible text, and touch targets are at least 44px (UX-DR16, UX-DR19)
+**And** numeric iconography, hierarchy, and red-asterisk-required conventions match EXPERIENCE.md on every form (UX-DR17)
+**And** loading, empty, and error states follow the uniform patterns - never a blank table or chart - on every shipped surface (UX-DR22, UX-DR20)
+**And** the `EmptyState` component exists in `client/src/components/` and replaces the POS grid's inline empty paragraph (UX-DR13)
+**And** dense tables announce their context with region role, label, and column scope (EXPERIENCE.md accessibility floor)
+**And** toasts follow the navy-with-cyan-edge treatment and dismiss correctly (UX-DR20)
+**And** light body text on `canvas` or `panel` meets the 4.5 to 1 contrast floor (DESIGN.md), and all numerals use tabular figures (UX-DR27)
 ### Story 1.6: Prove auth, roles, and shared types still hold after the retrofit
 
 As an owner,
@@ -362,8 +363,9 @@ So that login, role filtering, and the API contracts survive the mass class rewr
 **When** the app is exercised end to end after Stories 1.1-1.5
 **Then** unauthenticated visitors reach only Login and every other route redirects there with no valid JWT (FR1)
 **And** correct credentials sign in, wrong ones are rejected, logout clears the session, and only admins reach user registration (FR2-FR5)
-**And** cashiers see only POS and Transactions, managers additionally see Inventory, admins see everything (FR6), with no route or nav item leaking across roles
-**And** the client imports `Product`, `Sale`, and related types from `shared/types.ts` with no local re-declaration (FR33), and every displayed price passes through `formatCurrency()` (FR34)
+**And** cashiers see only POS and Transactions, managers additionally see Inventory, admins see everything (FR4), with no route or nav item leaking across roles
+**And** the client imports `Product`, `Sale`, and related types from `shared/types.ts` with no local re-declaration (FR34), and every displayed price passes through `formatCurrency()` (NFR5)
+**And** no page renders its own modal or table markup outside `client/src/components/` (FR33)
 **And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
 ## Epic 2: Organize the catalog, find anything, know what is low
 
@@ -381,7 +383,7 @@ So that the catalog stays organized as new product lines arrive.
 
 **Given** the `categories` table already exists with no routes and no UI
 **When** a manager creates, renames, or deletes a category
-**Then** categories are listed from the API ordered alphabetically (FR8)
+**Then** categories are listed from the API ordered alphabetically (FR9)
 **And** creating or renaming with a blank or duplicate name is rejected with a clear error (FR9)
 **And** the category manager UI uses `CategoryChips` and `FilterSelect` patterns consistent with the UX contract
 ### Story 2.2: Search products by name on Inventory and POS
@@ -394,7 +396,7 @@ So that I stop scrolling a long catalog during a sale.
 
 **Given** no search exists anywhere in any route
 **When** a user types a query in `SearchInput` on Inventory or POS
-**Then** results match case-insensitively and return in under 200ms (FR10)
+**Then** results match case-insensitively and return in under 200ms (FR10, FR13)
 **And** clearing the query restores the full list, and a query with no matches shows the empty state instead of a blank list (FR11)
 **And** `SearchInput` debounces input and shows a clear control consistent with the UX contract (UX-DR4)
 **And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
@@ -408,7 +410,7 @@ So that I can answer what is available and what needs attention without leaving 
 
 **Given** the product list from Story 2.2
 **When** a user picks a category or a stock status filter
-**Then** the list filters by `category_id` and by stock status with all, in-stock, low-stock, and out-of-stock states (FR12, FR13)
+**Then** the Inventory list filters by `category_id` and by stock status with all, in-stock, low-stock, and out-of-stock states (FR8, FR25), and the POS grid filters by category through `CategoryChips` without issuing a request (FR12)
 **And** filters apply live with a visible clear action, and combined search plus filters that match nothing show the empty state (UX-DR26)
 **And** the filter controls use `FilterSelect` and `CategoryChips` (UX-DR5, UX-DR6)
 ### Story 2.4: Manage per-product reorder levels with stock badges
@@ -421,8 +423,8 @@ So that fast sellers get attention before they run out.
 
 **Given** `products.reorder_level` already exists in the schema with no UI
 **When** a manager edits a product's reorder level
-**Then** the threshold is saved per product with a sensible default for products never edited (FR24, FR25)
-**And** every product row renders its stock through `stockTone()` - green commit-surface, amber, red - as the single stock rule with no competing badge (FR26, UX-DR14)
+**Then** the threshold is saved per product with a sensible default for products never edited (FR25; default 10 per the SPEC's binding answer)
+**And** every product row renders its stock through `stockTone()` - green commit-surface, amber, red - as the single stock rule with no competing badge (FR25, UX-DR14)
 ### Story 2.5: Record and list stock movements
 
 As a manager,
@@ -433,8 +435,8 @@ So that a quantity on the shelf can always be explained.
 
 **Given** the `stock_movements` table already exists with no routes and no UI
 **When** restocks, manual edits, and sale deductions occur
-**Then** each movement records product, quantity delta, movement type, timestamp, user, and optional note (FR29)
-**And** the movements list shows the newest first with product, delta, type, who, when, and note, filterable by product
+**Then** each movement records product, quantity delta, movement type, timestamp, user, and optional note (FR24, FR29)
+**And** the movements list shows the newest first with product, delta, type, who, when, and note, filterable by product (FR26)
 **And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
 ## Epic 3: Take the money, and prove it
 
@@ -453,8 +455,8 @@ So that the register totals can be reconciled by payment type at close.
 **Given** the sale payload already carries a `payment_method` field validated server-side, with zero client usage
 **When** a cashier picks a method in `PaymentMethodControl` and completes the sale
 **Then** every recorded sale carries exactly one valid payment method and the API rejects an invalid one (FR14, FR15)
-**And** the control is a segmented single-select defaulting to cash, text-labeled, never emoji (FR16, UX-DR8)
-**And** the Transactions list can be filtered by payment method (FR17)
+**And** the control is a segmented single-select defaulting to cash, text-labeled, never emoji (FR14, UX-DR8)
+**And** the Transactions list can be filtered by payment method (implemented with Story 3.3)
 ### Story 3.2: Complete the sale atomically with refresh
 
 As a cashier,
@@ -477,8 +479,8 @@ So that a return or a question can be answered at the counter.
 
 **Given** the Transactions page lists sales newest-first with no date or payment filter
 **When** a user filters by date or payment method, or pages through results
-**Then** the list filters by a single calendar day defaulting to today (FR30), by payment method including all (FR31), and pages without full reloads (FR32)
-**And** the empty state names the active filters instead of showing a blank table
+**Then** the list filters by a single calendar day defaulting to today (UX-DR26), by payment method including all (FR16), and pages without full reloads (keeps FR32 reachable)
+**And** the empty state names the active filters instead of showing a blank table (UX-DR22)
 ### Story 3.4: View and print the receipt
 
 As a cashier,
@@ -489,8 +491,8 @@ So that the customer leaves with proof and the drawer has a paper trail.
 
 **Given** a completed sale with lines, totals, payment method, and timestamp
 **When** a user opens and prints its receipt from POS or Transactions
-**Then** `ReceiptView` shows the store name from a single exported constant, line items, totals through `formatCurrency()`, payment method, and timestamp
-**And** printing uses browser print plus print CSS with no PDF library, and one consistent receipt layout serves both the post-sale and history paths (UX-DR12, UX-DR29)
+**Then** `ReceiptView` shows the store name from a single exported constant, line items, totals through `formatCurrency()`, payment method, and timestamp (FR30)
+**And** printing uses browser print plus print CSS with no PDF library, and one consistent receipt layout serves both the post-sale and history paths (FR31, FR32, UX-DR12, UX-DR29)
 ## Epic 4: See how the store is doing
 
 An owner or manager sees revenue over time, a daily/weekly/monthly toggle, the top products, the payment mix, the key numbers, and - in the same view - how many products are running low.
@@ -508,7 +510,7 @@ So that a slow Tuesday is visible instead of vibes.
 **Given** Recharts is not installed and no chart code exists
 **When** `recharts` is added as a dependency and the revenue chart ships inside `ChartPanel`
 **Then** the revenue line or area chart supports daily, weekly, and monthly aggregation with monthly as the default (FR18)
-**And** every axis and tooltip formats money through `formatCurrency()` with no raw numbers (FR19)
+**And** every axis and tooltip formats money through `formatCurrency()` with no raw numbers (UX-DR27)
 **And** loading shows a skeleton and an empty range shows the empty state, never a blank chart (UX-DR10, UX-DR30)
 ### Story 4.2: Show top products and payment mix
 
@@ -520,8 +522,8 @@ So that restocking and register setup follow the numbers.
 
 **Given** the dashboard chart surface from Story 4.1
 **When** the top-products and payment-mix charts render for the selected range
-**Then** the top 5 products by revenue show rank, name, quantity, and revenue (FR20)
-**And** the payment mix shows cash, card, and mobile shares summing to 100 percent with a legend and values (FR21)
+**Then** the top 5 products by revenue show rank, name, quantity, and revenue (FR19)
+**And** the payment mix shows cash, card, and mobile shares summing to 100 percent with a legend and values (FR20)
 ### Story 4.3: Show the key numbers with a date range control
 
 As an owner,
@@ -532,8 +534,8 @@ So that the health of the store fits on one glanceable row.
 
 **Given** the dashboard from Stories 4.1-4.2
 **When** a user picks a range in `DateRangeBar` or one of the metric cards
-**Then** total revenue, transaction count, average sale value, and items sold render as `StatCard` tiles with label, value, and optional delta (FR22, UX-DR9)
-**And** the range control offers presets plus custom dates, defaults to 30 days, and drives every tile and chart on the page (FR23, UX-DR11)
+**Then** total revenue, transaction count, average sale value, and items sold render as `StatCard` tiles with label, value, and optional delta (FR21, UX-DR9)
+**And** the range control offers presets plus custom dates, defaults to 30 days, and drives every tile and chart on the page (FR22, UX-DR11)
 **And** every money value passes through `formatCurrency()`
 ### Story 4.4: Call out low stock on the dashboard
 
@@ -564,7 +566,7 @@ So that the full menu fits a narrow screen without losing any route.
 **Given** the navy `ink` nav chrome from Epic 1 renders as a full bar on desktop
 **When** the viewport narrows below the mobile breakpoint
 **Then** the nav collapses to a hamburger that opens a drawer listing exactly the same role-filtered routes as desktop (FR35)
-**And** the drawer traps focus, closes on Escape and backdrop tap, and returns focus to the hamburger (UX-DR21)
+**And** the drawer traps focus, closes on Escape and backdrop tap, and returns focus to the hamburger (UX-DR18)
 ### Story 5.2: Move the cart into a drawer with an always-visible total
 
 As a cashier on a phone,
@@ -576,7 +578,7 @@ So that I can review and complete a sale without hunting for the cart.
 **Given** the POS cart renders as a side panel that crowds out products below 1024px
 **When** the viewport is below 1024px and the cart is opened from the fixed summary bar
 **Then** `CartDrawer` slides in with the line items, quantity controls, and Complete Sale action, while the summary bar always shows item count and total (FR36, UX-DR7)
-**And** the drawer traps focus, closes on Escape and backdrop tap, and the totals use `accent` flat on navy at heavier weight with no glow
+**And** the drawer traps focus, closes on Escape and backdrop tap, and the totals use `accent` flat on navy at heavier weight with no glow (UX-DR18, UX-DR15, UX-DR31)
 ### Story 5.3: Stack every surface at the tablet and phone breakpoints
 
 As a cashier on a tablet,
@@ -587,7 +589,7 @@ So that Dashboard, Reports, Inventory, and Transactions all work at the counter.
 
 **Given** the pages from Epics 1-4 with desktop-first layouts
 **When** the viewport crosses 768px and 1024px
-**Then** grids stack to one column where specified, tables scroll horizontally inside their container with no page-level sideways scroll, and each surface keeps exactly one primary action visible (FR37, UX-DR21)
+**Then** grids stack to one column where specified, tables scroll horizontally inside their container with no page-level sideways scroll, and each surface keeps exactly one primary action visible (FR37, UX-DR21, UX-DR25)
 **And** the Dashboard and Reports surfaces created in Epic 4 stack without breaking their charts
 ### Story 5.4: Keep the cart alive across filtering and drawer toggles
 
