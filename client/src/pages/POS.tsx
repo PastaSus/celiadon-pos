@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Minus, Plus, X } from 'lucide-react'
 import type { CartItem, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Button, LoadingSpinner, stockTone, useToast } from '../components'
+import { Badge, Button, LoadingSpinner, stockTone, useToast } from '../components'
 
 export default function POS() {
   const toast = useToast()
@@ -104,17 +105,10 @@ export default function POS() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Products Grid */}
       <div className="lg:col-span-2">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Products</h1>
+        <h1 className="text-2xl font-bold text-slate-800 mb-4">Products</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {products.map((product) => {
             const outOfStock = product.stock_quantity <= 0
-            const tone = stockTone(product.stock_quantity, product.reorder_level)
-            const stockColor =
-              tone === 'green'
-                ? 'text-green-600'
-                : tone === 'yellow'
-                  ? 'text-yellow-600'
-                  : 'text-red-600'
 
             return (
               <div
@@ -124,37 +118,39 @@ export default function POS() {
                   outOfStock ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                <h3 className="font-semibold text-gray-800">{product.name}</h3>
-                <p className="text-indigo-600 font-bold">{formatCurrency(product.price)}</p>
-                <p className={`text-sm ${stockColor}`}>
-                  {outOfStock ? 'Out of stock' : `${product.stock_quantity} in stock`}
-                </p>
+                <h3 className="font-semibold text-slate-800">{product.name}</h3>
+                <p className="text-slate-800 font-bold">{formatCurrency(product.price)}</p>
+                <div className="mt-1">
+                  <Badge tone={stockTone(product.stock_quantity, product.reorder_level)}>
+                    {outOfStock ? 'Out of stock' : `${product.stock_quantity} in stock`}
+                  </Badge>
+                </div>
               </div>
             )
           })}
         </div>
         {products.length === 0 && (
-          <p className="text-gray-500 py-8 text-center">No products available.</p>
+          <p className="text-slate-500 py-8 text-center">No products available.</p>
         )}
       </div>
 
       {/* Cart */}
       <div className="bg-white rounded-lg shadow-md p-4 h-fit sticky top-6">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">Cart</h2>
+        <h2 className="text-xl font-bold text-slate-800 mb-4">Cart</h2>
 
         {cart.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">Click products to add to cart</p>
+          <p className="text-slate-500 text-center py-8">Click products to add to cart</p>
         ) : (
           <>
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {cart.map((item) => (
                 <div
                   key={item.product.id}
-                  className="flex items-center justify-between border-b pb-3"
+                  className="flex items-center justify-between border-b border-line pb-3"
                 >
                   <div className="flex-1">
                     <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-slate-500">
                       {formatCurrency(item.product.price)} each
                     </p>
                   </div>
@@ -162,38 +158,42 @@ export default function POS() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="flex h-8 w-8 items-center justify-center !p-0"
+                      className="flex h-11 w-11 items-center justify-center !p-0"
                       onClick={() => updateQuantity(item.product.id, -1)}
+                      aria-label={`Decrease quantity of ${item.product.name}`}
                     >
-                      −
+                      <Minus size={20} aria-hidden="true" />
                     </Button>
                     <span className="w-8 text-center">{item.quantity}</span>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="flex h-8 w-8 items-center justify-center !p-0"
+                      className="flex h-11 w-11 items-center justify-center !p-0"
                       onClick={() => updateQuantity(item.product.id, 1)}
+                      aria-label={`Increase quantity of ${item.product.name}`}
                     >
-                      +
+                      <Plus size={20} aria-hidden="true" />
                     </Button>
                     <Button
                       variant="dangerGhost"
                       size="sm"
-                      className="ml-2"
+                      className="ml-2 flex h-11 w-11 items-center justify-center !p-0"
                       onClick={() => removeFromCart(item.product.id)}
+                      aria-label={`Remove ${item.product.name} from cart`}
                     >
-                      &times;
-                      
+                      <X size={20} aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="border-t mt-4 pt-4">
-              <div className="flex justify-between text-lg font-bold">
-                <span>Total:</span>
-                <span>{formatCurrency(total)}</span>
+            <div className="border-t border-line mt-4 pt-4">
+              <div className="bg-ink rounded-lg p-4 flex justify-between items-center">
+                <span className="text-white font-bold">Total:</span>
+                <span className="text-accent text-2xl font-extrabold tabular-nums">
+                  {formatCurrency(total)}
+                </span>
               </div>
               <Button
                 variant="success"

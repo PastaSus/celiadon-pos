@@ -5,7 +5,7 @@ import Inventory from './pages/Inventory'
 import POS from './pages/POS'
 import Transactions from './pages/Transactions'
 import Login from './pages/Login'
-import { Button, LoadingSpinner } from './components'
+import { LoadingSpinner } from './components'
 import { useAuth } from './contexts/AuthContext'
 import type { UserRole } from '../../shared/types'
 
@@ -45,13 +45,13 @@ function ProtectedRoute({ roles, children }: { roles: UserRole[]; children: Reac
   if (!roles.includes(user.role)) {
     return (
       <div className="bg-white rounded-lg shadow-md p-8 text-center">
-        <p className="text-lg font-semibold text-gray-800">Access denied</p>
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-lg font-semibold text-slate-800">Access denied</p>
+        <p className="text-sm text-slate-500 mt-1">
           Your role ({user.role}) does not have permission to view this page.
         </p>
         <Link
           to={landingFor(user.role)}
-          className="inline-block mt-4 text-sm text-indigo-600 hover:text-indigo-800"
+          className="inline-block mt-4 text-sm text-brand hover:text-brand-strong"
         >
           Go to {landingFor(user.role) === '/pos' ? 'Point of Sale' : 'Dashboard'}
         </Link>
@@ -68,7 +68,7 @@ function App() {
 
   if (!ready) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <LoadingSpinner label="Loading session..." />
       </div>
     )
@@ -87,13 +87,13 @@ function App() {
   const navItems = NAV_ITEMS.filter((item) => item.roles.includes(user.role))
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-canvas">
       {/* Navigation */}
-      <nav className="bg-white shadow-lg">
+      <nav className="bg-ink">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
-              <span className="text-xl font-bold text-indigo-600">Cube Tech POS</span>
+              <span className="text-xl font-bold text-accent">Cube Tech POS</span>
             </div>
             <div className="flex items-center space-x-1 sm:space-x-4">
               {navItems.map((item) => (
@@ -102,20 +102,24 @@ function App() {
                   to={item.path}
                   className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     location.pathname === item.path
-                      ? 'bg-indigo-100 text-indigo-700'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-brand text-white'
+                      : 'text-slate-300 hover:text-white hover:bg-white/10'
                   }`}
                 >
                   {item.label}
                 </Link>
               ))}
-              <div className="flex items-center pl-2 border-l border-gray-200">
-                <span className="hidden md:inline text-sm text-gray-500 mr-3">
+              <div className="flex items-center pl-2 border-l border-slate-700">
+                <span className="hidden md:inline text-sm text-slate-300 mr-3">
                   {user.email} · {user.role}
                 </span>
-                <Button variant="ghost" size="sm" onClick={logout}>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                >
                   Sign out
-                </Button>
+                </button>
               </div>
             </div>
           </div>
