@@ -27,14 +27,14 @@ export default function Table<T>({
   const cellClass = dense ? 'py-1' : 'px-6 py-4 whitespace-nowrap';
   const headClass = dense
     ? 'text-left py-1 font-medium'
-    : 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider';
+    : 'px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider';
 
   return (
     <div className={wrapperClass}>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className={dense ? '' : 'bg-gray-50'}>
-            <tr className={dense ? 'border-b' : ''}>
+          <thead className={dense ? '' : 'bg-panel'}>
+            <tr className={dense ? 'border-b border-line' : ''}>
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -45,9 +45,9 @@ export default function Table<T>({
               ))}
             </tr>
           </thead>
-          <tbody className={dense ? '' : 'divide-y divide-gray-200'}>
+          <tbody className={dense ? '' : 'divide-y divide-line'}>
             {rows.map((row) => (
-              <tr key={rowKey(row)} className={dense ? 'border-b' : 'hover:bg-gray-50'}>
+              <tr key={rowKey(row)} className={dense ? 'border-b border-line' : 'hover:bg-panel'}>
                 {columns.map((column) => (
                   <td
                     key={column.key}
@@ -62,7 +62,7 @@ export default function Table<T>({
         </table>
       </div>
       {rows.length === 0 && (
-        <div className="text-center py-8 text-gray-500">{emptyMessage}</div>
+        <div className="text-center py-8 text-slate-500">{emptyMessage}</div>
       )}
     </div>
   );

@@ -9,9 +9,9 @@ export default {
       // Palette tokens: hex values from DESIGN.md frontmatter, key names per UX-DR1.
       // brand = primary family, accent = accent family, commit = success deep-teal,
       // ink = navy chrome, canvas = page bg, panel = surface-muted, line = border.
-      // Deferred to later stories: success-surface/text, warning/danger fills, chart
-      // series, overlay. Slate text ramp and surface white use Tailwind defaults
-      // (slate-*, white); focus rings use ring-brand / ring-accent (ring == brand).
+      // Deferred to later stories: chart series, overlay. Slate text ramp and
+      // surface white use Tailwind defaults (slate-*, white); focus rings use
+      // ring-brand / ring-accent (ring == brand).
       colors: {
         brand: {
           DEFAULT: '#1690E8',
@@ -30,6 +30,19 @@ export default {
         commit: {
           DEFAULT: '#0B7E71',
           hover: '#0A6B61',
+          surface: '#CCFBF1',
+          text: '#115E59',
+        },
+        warning: {
+          DEFAULT: '#EAB308',
+          surface: '#FEF9C3',
+          text: '#854D0E',
+        },
+        danger: {
+          DEFAULT: '#DC2626',
+          hover: '#B91C1C',
+          surface: '#FEE2E2',
+          text: '#991B1B',
         },
         ink: {
           DEFAULT: '#0A1929',
