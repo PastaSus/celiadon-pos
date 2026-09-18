@@ -14,7 +14,7 @@ development_status:
   # Epic 1: The product looks and behaves like one app
   epic-1: in-progress
   1-1-adopt-palette-tokens: review
-  1-2-install-lucide-react: backlog
+  1-2-install-lucide-react: review
   1-3-migrate-components-palette: backlog
   1-4-migrate-pages-palette: backlog
   1-5-accessibility-floor: backlog

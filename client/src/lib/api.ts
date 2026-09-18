@@ -1,6 +1,6 @@
 import type { ApiError, AuthResponse, User } from '../../../shared/types';
 
-// Local dev: Vite proxies /api → localhost:5000. Deployed (Vercel): the
+// Local dev: Vite proxies /api -> localhost:5000. Deployed (Vercel): the
 // frontend is static, so set VITE_API_URL to the backend's URL
 // (e.g. https://cube-tech-pos-api.vercel.app). No trailing slash.
 const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api`;
