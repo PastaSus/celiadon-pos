@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import authRouter from './routes/auth';
 import productsRouter from './routes/products';
+import categoriesRouter from './routes/categories';
 import salesRouter from './routes/sales';
 import dashboardRouter from './routes/dashboard';
 
@@ -17,6 +18,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/products', productsRouter);
+app.use('/api/categories', categoriesRouter);
 app.use('/api/sales', salesRouter);
 app.use('/api/dashboard', dashboardRouter);
 

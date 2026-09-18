@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import type { Product } from '../../../shared/types'
+import type { Category, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, LoadingSpinner, Modal, Table, stockTone, useToast } from '../components'
+import { Badge, Button, EmptyState, LoadingSpinner, Modal, Table, stockTone, useToast } from '../components'
 import type { Column } from '../components'
 
 const EMPTY_FORM = { name: '', price: '', stock_quantity: '' }
@@ -15,6 +15,14 @@ export default function Inventory() {
   const [pendingDelete, setPendingDelete] = useState<Product | null>(null)
   const [formData, setFormData] = useState(EMPTY_FORM)
   const [saving, setSaving] = useState(false)
+  const [showCategories, setShowCategories] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(null)
+  const [editCategoryName, setEditCategoryName] = useState('')
+  const [confirmingCategoryId, setConfirmingCategoryId] = useState<number | null>(null)
+  const [categorySaving, setCategorySaving] = useState(false)
 
   const loadProducts = () => {
     fetchApi<Product[]>('/products')
@@ -97,6 +105,79 @@ export default function Inventory() {
     }
   }
 
+  const loadCategories = () => {
+    setCategoriesLoading(true)
+    fetchApi<Category[]>('/categories')
+      .then(setCategories)
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : 'Failed to load categories')
+      })
+      .finally(() => setCategoriesLoading(false))
+  }
+
+  const openCategories = () => {
+    setNewCategoryName('')
+    setEditingCategoryId(null)
+    setConfirmingCategoryId(null)
+    setShowCategories(true)
+    loadCategories()
+  }
+
+  const closeCategories = () => {
+    setShowCategories(false)
+    setEditingCategoryId(null)
+    setConfirmingCategoryId(null)
+  }
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setCategorySaving(true)
+    try {
+      await fetchApi('/categories', {
+        method: 'POST',
+        body: JSON.stringify({ name: newCategoryName })
+      })
+      toast.success('Category added')
+      setNewCategoryName('')
+      loadCategories()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to add category')
+    } finally {
+      setCategorySaving(false)
+    }
+  }
+
+  const handleRenameCategory = async (id: number) => {
+    setCategorySaving(true)
+    try {
+      await fetchApi(`/categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: editCategoryName })
+      })
+      toast.success('Category renamed')
+      setEditingCategoryId(null)
+      loadCategories()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to rename category')
+    } finally {
+      setCategorySaving(false)
+    }
+  }
+
+  const handleDeleteCategory = async (id: number) => {
+    setCategorySaving(true)
+    try {
+      await fetchApi(`/categories/${id}`, { method: 'DELETE' })
+      toast.success('Category deleted')
+      setConfirmingCategoryId(null)
+      loadCategories()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete category')
+    } finally {
+      setCategorySaving(false)
+    }
+  }
+
   const columns: Column<Product>[] = [
     {
       key: 'name',
@@ -150,7 +231,12 @@ export default function Inventory() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Inventory Management</h1>
-        <Button onClick={openAddModal}>+ Add Product</Button>
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={openCategories}>
+            Manage categories
+          </Button>
+          <Button onClick={openAddModal}>+ Add Product</Button>
+        </div>
       </div>
 
       <Table
@@ -238,6 +324,141 @@ export default function Inventory() {
             Delete
           </Button>
         </div>
+      </Modal>
+
+      <Modal open={showCategories} title="Manage categories" onClose={closeCategories}>
+        <form onSubmit={handleAddCategory} className="flex gap-3 mb-6">
+          <label htmlFor="new-category" className="sr-only">
+            New category name
+          </label>
+          <input
+            id="new-category"
+            type="text"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+            placeholder="New category name"
+            maxLength={255}
+            required
+            className="flex-1 border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+          />
+          <Button type="submit" disabled={categorySaving}>
+            Add
+          </Button>
+        </form>
+
+        {categoriesLoading ? (
+          <LoadingSpinner label="Loading categories..." />
+        ) : categories.length === 0 ? (
+          <EmptyState message="No categories yet." />
+        ) : (
+          <ul className="space-y-2">
+            {categories.map((category) => (
+              <li
+                key={category.id}
+                className="flex items-center justify-between gap-3 border-b border-line pb-2"
+              >
+                {editingCategoryId === category.id ? (
+                  <form
+                    className="flex flex-1 items-center justify-between gap-3"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      handleRenameCategory(category.id)
+                    }}
+                  >
+                    <label htmlFor={`rename-category-${category.id}`} className="sr-only">
+                      Category name
+                    </label>
+                    <input
+                      id={`rename-category-${category.id}`}
+                      type="text"
+                      value={editCategoryName}
+                      onChange={(e) => setEditCategoryName(e.target.value)}
+                      maxLength={255}
+                      required
+                      className="flex-1 border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+                    />
+                    <div className="flex gap-3">
+                      <Button type="submit" size="sm" disabled={categorySaving}>
+                        Save
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setEditingCategoryId(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </form>
+                ) : confirmingCategoryId === category.id ? (
+                  <>
+                    <span className="text-sm text-slate-600">
+                      Delete <span className="font-semibold">{category.name}</span>?
+                      {(() => {
+                        const using = products.filter((p) => p.category_id === category.id)
+                        if (using.length === 0) return null
+                        return (
+                          <span>
+                            {' '}
+                            {using.length} {using.length === 1 ? 'product uses' : 'products use'}{' '}
+                            it: {using.map((p) => p.name).join(', ')}.
+                          </span>
+                        )
+                      })()}
+                    </span>
+                    <div className="flex gap-3">
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleDeleteCategory(category.id)}
+                        disabled={categorySaving}
+                      >
+                        Confirm
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setConfirmingCategoryId(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-medium text-slate-800">{category.name}</span>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Edit ${category.name}`}
+                        onClick={() => {
+                          setEditingCategoryId(category.id)
+                          setEditCategoryName(category.name)
+                          setConfirmingCategoryId(null)
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="dangerGhost"
+                        size="sm"
+                        aria-label={`Delete ${category.name}`}
+                        onClick={() => {
+                          setConfirmingCategoryId(category.id)
+                          setEditingCategoryId(null)
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </Modal>
     </div>
   )

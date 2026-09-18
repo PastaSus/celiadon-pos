@@ -22,7 +22,7 @@ development_status:
 
   # Epic 2: Organize the catalog, find anything, know what is low
   epic-2: backlog
-  2-1-category-crud: backlog
+  2-1-category-crud: review
   2-2-product-search: backlog
   2-3-category-stock-filters: backlog
   2-4-reorder-levels-badges: backlog

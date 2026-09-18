@@ -7,3 +7,6 @@
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-1-5-accessibility-floor.md`
   summary: Add component tests for the accessibility behaviors (Modal Escape/trap/focus-return, tile keyboard commit and disabled state, Table region/scope, label association, EmptyState rendering) when the test framework lands.
   evidence: Verification-gap review proved no test observes these behaviors; NFR13 forbids a runner this phase, so coverage waits for the test-framework story with the manual keyboard/AT pass as interim.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-1-category-crud.md`
+  summary: Harden pre-existing product routes with numeric :id validation and explicit column lists to match the categories route.
+  evidence: Story 2.1 review found PUT/DELETE /products/:id pass raw params to pg (500 on garbage input) and use SELECT *; the new categories route guards both, leaving the older file as the inconsistent one.
