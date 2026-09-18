@@ -14,6 +14,8 @@ interface TableProps<T> {
   emptyMessage?: string;
   /** Dense drops the outer card and shrinks spacing, for tables nested inside a Modal. */
   dense?: boolean;
+  /** Accessible name for the scroll region; only applied as a role="region" wrapper in dense mode. */
+  label?: string;
 }
 
 export default function Table<T>({
@@ -21,16 +23,19 @@ export default function Table<T>({
   rows,
   rowKey,
   emptyMessage = 'No records found',
-  dense = false
+  dense = false,
+  label
 }: TableProps<T>) {
   const wrapperClass = dense ? '' : 'bg-white rounded-lg shadow-md overflow-hidden';
+  const regionProps =
+    dense && label ? { role: 'region' as const, 'aria-label': label } : {};
   const cellClass = dense ? 'py-1' : 'px-6 py-4 whitespace-nowrap';
   const headClass = dense
-    ? 'text-left py-1 font-medium'
-    : 'px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider';
+    ? 'text-left py-1 font-medium text-slate-600'
+    : 'px-6 py-3 text-left text-xs font-medium text-slate-600 uppercase tracking-wider';
 
   return (
-    <div className={wrapperClass}>
+    <div className={wrapperClass} {...regionProps}>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className={dense ? '' : 'bg-panel'}>
@@ -38,6 +43,7 @@ export default function Table<T>({
               {columns.map((column) => (
                 <th
                   key={column.key}
+                  scope="col"
                   className={`${headClass} ${column.align === 'right' ? 'text-right' : ''}`}
                 >
                   {column.header}
@@ -62,7 +68,7 @@ export default function Table<T>({
         </table>
       </div>
       {rows.length === 0 && (
-        <div className="text-center py-8 text-slate-500">{emptyMessage}</div>
+        <div className="text-center py-8 text-slate-600">{emptyMessage}</div>
       )}
     </div>
   );

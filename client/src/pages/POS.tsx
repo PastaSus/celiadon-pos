@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Minus, Plus, X } from 'lucide-react'
 import type { CartItem, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, LoadingSpinner, stockTone, useToast } from '../components'
+import { Badge, Button, EmptyState, LoadingSpinner, stockTone, useToast } from '../components'
 
 export default function POS() {
   const toast = useToast()
@@ -111,26 +111,29 @@ export default function POS() {
             const outOfStock = product.stock_quantity <= 0
 
             return (
-              <div
+              <button
                 key={product.id}
+                type="button"
+                disabled={outOfStock}
+                aria-label={`Add ${product.name} to cart`}
                 onClick={() => addToCart(product)}
-                className={`bg-white rounded-lg shadow-md p-4 cursor-pointer transition-all hover:shadow-lg ${
-                  outOfStock ? 'opacity-50 cursor-not-allowed' : ''
+                className={`bg-white rounded-lg shadow-md p-4 text-left transition-all hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
+                  outOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                 }`}
               >
                 <h3 className="font-semibold text-slate-800">{product.name}</h3>
-                <p className="text-slate-800 font-bold">{formatCurrency(product.price)}</p>
+                <p className="text-slate-800 font-bold tabular-nums">{formatCurrency(product.price)}</p>
                 <div className="mt-1">
                   <Badge tone={stockTone(product.stock_quantity, product.reorder_level)}>
                     {outOfStock ? 'Out of stock' : `${product.stock_quantity} in stock`}
                   </Badge>
                 </div>
-              </div>
+              </button>
             )
           })}
         </div>
         {products.length === 0 && (
-          <p className="text-slate-500 py-8 text-center">No products available.</p>
+          <EmptyState message="No products available." />
         )}
       </div>
 

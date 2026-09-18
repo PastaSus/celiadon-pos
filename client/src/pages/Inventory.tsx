@@ -167,8 +167,12 @@ export default function Inventory() {
       >
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Product Name</label>
+            <label htmlFor="product-name" className="block text-sm font-medium text-slate-700 mb-1">
+              Product Name
+              <span aria-hidden="true" className="text-danger"> *</span>
+            </label>
             <input
+              id="product-name"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -177,8 +181,12 @@ export default function Inventory() {
             />
           </div>
           <div className="mb-4">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Price</label>
+            <label htmlFor="product-price" className="block text-sm font-medium text-slate-700 mb-1">
+              Price
+              <span aria-hidden="true" className="text-danger"> *</span>
+            </label>
             <input
+              id="product-price"
               type="number"
               step="0.01"
               min="0"
@@ -189,8 +197,12 @@ export default function Inventory() {
             />
           </div>
           <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 mb-1">Stock Quantity</label>
+            <label htmlFor="product-stock" className="block text-sm font-medium text-slate-700 mb-1">
+              Stock Quantity
+              <span aria-hidden="true" className="text-danger"> *</span>
+            </label>
             <input
+              id="product-stock"
               type="number"
               min="0"
               value={formData.stock_quantity}
