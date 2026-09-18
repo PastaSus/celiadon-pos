@@ -51,7 +51,7 @@ function ProtectedRoute({ roles, children }: { roles: UserRole[]; children: Reac
         </p>
         <Link
           to={landingFor(user.role)}
-          className="inline-block mt-4 text-sm text-brand hover:text-brand-strong"
+          className="inline-block mt-4 rounded-md text-sm text-brand hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
         >
           Go to {landingFor(user.role) === '/pos' ? 'Point of Sale' : 'Dashboard'}
         </Link>
@@ -100,7 +100,7 @@ function App() {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${
                     location.pathname === item.path
                       ? 'bg-brand text-white'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -116,7 +116,7 @@ function App() {
                 <button
                   type="button"
                   onClick={logout}
-                  className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                  className="px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
                 >
                   Sign out
                 </button>

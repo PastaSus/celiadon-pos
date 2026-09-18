@@ -31,6 +31,7 @@ export default function Login() {
           <div className="mb-4">
             <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
               Email
+              <span aria-hidden="true" className="text-danger"> *</span>
             </label>
             <input
               id="email"
@@ -46,6 +47,7 @@ export default function Login() {
           <div className="mb-6">
             <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
               Password
+              <span aria-hidden="true" className="text-danger"> *</span>
             </label>
             <input
               id="password"

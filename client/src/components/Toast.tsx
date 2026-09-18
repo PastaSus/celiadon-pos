@@ -16,7 +16,7 @@ interface ToastContextValue {
 }
 
 const TONES: Record<ToastTone, string> = {
-  success: 'bg-commit text-white',
+  success: 'bg-ink text-white border-l-4 border-accent',
   error: 'bg-danger text-white',
   info: 'bg-ink text-white'
 };

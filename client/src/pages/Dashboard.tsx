@@ -67,7 +67,7 @@ export default function Dashboard() {
               <span className={`h-3 w-3 rounded-full ${stat.color}`} />
               <p className="text-sm text-slate-500">{stat.label}</p>
             </div>
-            <p className="text-2xl font-bold text-slate-800 mt-2">{stat.value}</p>
+            <p className="text-2xl font-bold text-slate-800 mt-2 tabular-nums">{stat.value}</p>
           </div>
         ))}
       </div>

@@ -108,19 +108,20 @@ export default function Transactions() {
         ) : selectedSale ? (
           <div className="space-y-4">
             <div className="bg-panel p-4 rounded-lg">
-              <p className="text-sm text-slate-500">Receipt Number</p>
+              <p className="text-sm text-slate-600">Receipt Number</p>
               <p className="font-mono font-bold">{selectedSale.receipt_number}</p>
             </div>
 
             <div className="bg-panel p-4 rounded-lg">
-              <p className="text-sm text-slate-500">Date</p>
+              <p className="text-sm text-slate-600">Date</p>
               <p>{new Date(selectedSale.transaction_date).toLocaleString()}</p>
             </div>
 
             <div className="bg-panel p-4 rounded-lg">
-              <p className="text-sm text-slate-500 mb-2">Items</p>
+              <p className="text-sm text-slate-600 mb-2">Items</p>
               <Table
                 dense
+                label="Items"
                 columns={itemColumns}
                 rows={selectedSale.items ?? []}
                 rowKey={(item) => item.id}
