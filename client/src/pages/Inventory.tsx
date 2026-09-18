@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Category, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, EmptyState, LoadingSpinner, Modal, Table, stockTone, useToast } from '../components'
+import { Badge, Button, EmptyState, LoadingSpinner, Modal, SearchInput, Table, stockTone, useToast } from '../components'
 import type { Column } from '../components'
 
 const EMPTY_FORM = { name: '', price: '', stock_quantity: '' }
@@ -23,10 +23,21 @@ export default function Inventory() {
   const [editCategoryName, setEditCategoryName] = useState('')
   const [confirmingCategoryId, setConfirmingCategoryId] = useState<number | null>(null)
   const [categorySaving, setCategorySaving] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  // Monotonic request id: a slow earlier search never overwrites fresher rows.
+  const searchSeq = useRef(0)
+  // Full catalog for the category delete warning, independent of the
+  // search-filtered products list shown in the table.
+  const [categoryScopeProducts, setCategoryScopeProducts] = useState<Product[]>([])
 
-  const loadProducts = () => {
-    fetchApi<Product[]>('/products')
-      .then(setProducts)
+  const loadProducts = (query: string) => {
+    const my = ++searchSeq.current
+    const endpoint = query === '' ? '/products' : `/products?search=${encodeURIComponent(query)}`
+    fetchApi<Product[]>(endpoint)
+      .then((rows) => {
+        if (my === searchSeq.current) setProducts(rows)
+      })
       .catch((error) => {
         toast.error(error instanceof Error ? error.message : 'Failed to load products')
       })
@@ -34,9 +45,17 @@ export default function Inventory() {
   }
 
   useEffect(() => {
-    loadProducts()
+    loadProducts('')
     // toast's identity is stable, so this still runs once on mount.
   }, [toast])
+
+  const handleSearch = (term: string) => {
+    // A whitespace-only term counts as cleared, matching the server, so the
+    // UI never sits in searching mode over the full list.
+    const query = term.trim()
+    setSearchQuery(query)
+    loadProducts(query)
+  }
 
   const closeModal = () => {
     setShowModal(false)
@@ -85,7 +104,7 @@ export default function Inventory() {
       }
 
       closeModal()
-      loadProducts()
+      loadProducts(searchQuery)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to save product')
     } finally {
@@ -99,7 +118,7 @@ export default function Inventory() {
       await fetchApi(`/products/${pendingDelete.id}`, { method: 'DELETE' })
       toast.success('Product deleted')
       setPendingDelete(null)
-      loadProducts()
+      loadProducts(searchQuery)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to delete product')
     }
@@ -121,6 +140,11 @@ export default function Inventory() {
     setConfirmingCategoryId(null)
     setShowCategories(true)
     loadCategories()
+    fetchApi<Product[]>('/products')
+      .then(setCategoryScopeProducts)
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : 'Failed to load products')
+      })
   }
 
   const closeCategories = () => {
@@ -239,11 +263,28 @@ export default function Inventory() {
         </div>
       </div>
 
+      <div className="mb-6 max-w-md">
+        <SearchInput
+          value={searchText}
+          onChange={setSearchText}
+          onSearch={handleSearch}
+          placeholder="Search products..."
+        />
+        {searchQuery !== '' && (
+          <p aria-live="polite" className="text-sm text-slate-500 mt-2">
+            {products.length} {products.length === 1 ? 'result' : 'results'} for &ldquo;
+            {searchQuery}&rdquo;
+          </p>
+        )}
+      </div>
+
       <Table
         columns={columns}
         rows={products}
         rowKey={(product) => product.id}
-        emptyMessage="No products yet. Add your first product!"
+        emptyMessage={
+          searchQuery !== '' ? 'No products match this filter' : 'No products yet. Add your first product!'
+        }
       />
 
       <Modal
@@ -396,7 +437,7 @@ export default function Inventory() {
                     <span className="text-sm text-slate-600">
                       Delete <span className="font-semibold">{category.name}</span>?
                       {(() => {
-                        const using = products.filter((p) => p.category_id === category.id)
+                        const using = categoryScopeProducts.filter((p) => p.category_id === category.id)
                         if (using.length === 0) return null
                         return (
                           <span>

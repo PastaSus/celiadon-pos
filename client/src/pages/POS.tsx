@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Minus, Plus, X } from 'lucide-react'
 import type { CartItem, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, EmptyState, LoadingSpinner, stockTone, useToast } from '../components'
+import { Badge, Button, EmptyState, LoadingSpinner, SearchInput, stockTone, useToast } from '../components'
 
 export default function POS() {
   const toast = useToast()
@@ -10,6 +10,16 @@ export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
+  const [searchText, setSearchText] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const trimmedQuery = searchQuery.trim()
+  const visibleProducts =
+    trimmedQuery === ''
+      ? products
+      : products.filter((product) =>
+          product.name.toLowerCase().includes(trimmedQuery.toLowerCase())
+        )
 
   const loadProducts = () =>
     fetchApi<Product[]>('/products')
@@ -106,8 +116,22 @@ export default function POS() {
       {/* Products Grid */}
       <div className="lg:col-span-2">
         <h1 className="text-2xl font-bold text-slate-800 mb-4">Products</h1>
+        <div className="mb-4 max-w-md">
+          <SearchInput
+            value={searchText}
+            onChange={setSearchText}
+            onSearch={setSearchQuery}
+            placeholder="Search products..."
+          />
+          {trimmedQuery !== '' && (
+            <p aria-live="polite" className="text-sm text-slate-500 mt-2">
+              {visibleProducts.length} {visibleProducts.length === 1 ? 'result' : 'results'} for
+              &ldquo;{trimmedQuery}&rdquo;
+            </p>
+          )}
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {products.map((product) => {
+          {visibleProducts.map((product) => {
             const outOfStock = product.stock_quantity <= 0
 
             return (
@@ -132,8 +156,10 @@ export default function POS() {
             )
           })}
         </div>
-        {products.length === 0 && (
-          <EmptyState message="No products available." />
+        {visibleProducts.length === 0 && (
+          <EmptyState
+            message={trimmedQuery !== '' ? 'No products match your search.' : 'No products available.'}
+          />
         )}
       </div>
 

@@ -33,10 +33,22 @@ function validateProductBody(
 // Cashiers may read products because the POS grid needs them, but only admins
 // and managers may mutate inventory (CAP-1).
 
-// Get all products
-router.get('/', requireAuth, async (_req: AuthedRequest, res: Response) => {
+// Get all products, optionally narrowed by a case-insensitive name search.
+// LIKE wildcards in the term are escaped so a literal % or _ never acts as
+// one; a missing or blank search returns the full list.
+router.get('/', requireAuth, async (req: AuthedRequest, res: Response) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
+    const rawSearch = typeof req.query.search === 'string' ? req.query.search.trim() : '';
+    if (rawSearch === '') {
+      const { rows } = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
+      res.json(rows);
+      return;
+    }
+    const term = rawSearch.replace(/([\\%_])/g, '\\$1');
+    const { rows } = await pool.query(
+      "SELECT * FROM products WHERE name ILIKE $1 ESCAPE '\\' ORDER BY created_at DESC",
+      [`%${term}%`]
+    );
     res.json(rows);
   } catch (error) {
     console.error('Error fetching products:', error);
