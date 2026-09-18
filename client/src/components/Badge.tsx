@@ -3,11 +3,11 @@ import type { ReactNode } from 'react';
 export type Tone = 'green' | 'yellow' | 'red' | 'indigo' | 'gray';
 
 const TONES: Record<Tone, string> = {
-  green: 'bg-green-100 text-green-800',
-  yellow: 'bg-yellow-100 text-yellow-800',
-  red: 'bg-red-100 text-red-800',
-  indigo: 'bg-indigo-100 text-indigo-800',
-  gray: 'bg-gray-100 text-gray-800'
+  green: 'bg-commit-surface text-commit-text',
+  yellow: 'bg-warning-surface text-warning-text',
+  red: 'bg-danger-surface text-danger-text',
+  indigo: 'bg-brand-surface text-brand-strong',
+  gray: 'bg-canvas text-slate-800'
 };
 
 interface BadgeProps {

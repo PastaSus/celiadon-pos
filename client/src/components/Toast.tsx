@@ -16,9 +16,9 @@ interface ToastContextValue {
 }
 
 const TONES: Record<ToastTone, string> = {
-  success: 'bg-green-600 text-white',
-  error: 'bg-red-600 text-white',
-  info: 'bg-gray-800 text-white'
+  success: 'bg-commit text-white',
+  error: 'bg-danger text-white',
+  info: 'bg-ink text-white'
 };
 
 const ToastContext = createContext<ToastContextValue | null>(null);
