@@ -90,13 +90,13 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="relative flex items-center">
+      <div className="relative mx-[22px] flex items-center lg:mx-0">
         <button
           type="button"
           onClick={() => scrollStrip(-1)}
           disabled={!canScrollLeft}
           aria-label="Scroll presets left"
-          className={`${scrollButtonClass} left-1/2`}
+          className={`${scrollButtonClass} left-0 -translate-x-1/2`}
         >
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
@@ -126,7 +126,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
           onClick={() => scrollStrip(1)}
           disabled={!canScrollRight}
           aria-label="Scroll presets right"
-          className={`${scrollButtonClass} right-1/2`}
+          className={`${scrollButtonClass} right-0 translate-x-1/2`}
         >
           <ChevronRight size={20} aria-hidden="true" />
         </button>
