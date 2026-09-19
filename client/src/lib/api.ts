@@ -7,6 +7,8 @@ const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api`;
 
 const TOKEN_KEY = 'pos.token';
 
+export const STORE_NAME = 'Cube Tech POS';
+
 export class ApiRequestError extends Error {
   status: number;
 

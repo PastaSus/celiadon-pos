@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Minus, Plus, X } from 'lucide-react'
-import type { CartItem, Category, PaymentMethod, Product } from '../../../shared/types'
+import type { CartItem, Category, PaymentMethod, Product, Sale } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
 import { Badge, Button, CategoryChips, EmptyState, LoadingSpinner, PaymentMethodControl, SearchInput, stockTone, useToast } from '../components'
 
 export default function POS() {
   const toast = useToast()
+  const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -104,7 +106,7 @@ export default function POS() {
         quantity: item.quantity
       }))
 
-      await fetchApi('/sales', {
+      const sale = await fetchApi<Sale>('/sales', {
         method: 'POST',
         body: JSON.stringify({ items, payment_method: paymentMethod })
       })
@@ -114,6 +116,7 @@ export default function POS() {
       setPaymentMethod('cash')
       // Stock changed, so refresh the grid.
       await loadProducts()
+      navigate(`/receipts/${sale.id}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to process transaction')
     } finally {
