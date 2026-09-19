@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import FilterSelect from './FilterSelect';
 
 export type RangePreset = 'today' | '7' | '30' | '90' | 'custom';
 
@@ -46,31 +45,18 @@ export function defaultRange(): DateRange {
  */
 export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBarProps) {
   const today = toISODate(new Date());
-  const stripRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const updateScrollState = () => {
-    const strip = stripRef.current;
-    if (!strip) return;
-    setCanScrollLeft(strip.scrollLeft > 0);
-    setCanScrollRight(strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1);
-  };
-
-  useEffect(() => {
-    updateScrollState();
-    window.addEventListener('resize', updateScrollState);
-    return () => window.removeEventListener('resize', updateScrollState);
-  }, []);
-
-  const scrollStrip = (direction: -1 | 1) => {
-    stripRef.current?.scrollBy({ left: direction * 160, behavior: 'smooth' });
-  };
-
-  const scrollButtonClass = `absolute top-1/2 z-10 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-full bg-white text-brand-strong shadow transition-colors hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-white md:hidden`;
 
   const applyPreset = (days: number, value: RangePreset) => {
     onChange({ from: shiftISODate(today, -(days - 1)), to: today }, value);
+  };
+
+  const handlePresetSelect = (value: string) => {
+    if (value === 'custom') {
+      onChange({ from, to }, 'custom');
+      return;
+    }
+    const option = PRESETS.find((entry) => entry.value === value);
+    if (option) applyPreset(option.days, option.value);
   };
 
   const handleFromChange = (value: string) => {
@@ -84,23 +70,23 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
   };
 
   const chipClass = (active: boolean) =>
-    `inline-flex min-h-[44px] shrink-0 snap-start items-center rounded-full px-4 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
+    `inline-flex min-h-[44px] items-center rounded-full px-4 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
       active ? 'bg-brand text-white' : 'bg-white text-brand-strong hover:bg-brand-surface'
     }`;
 
   return (
     <div className="flex flex-col items-center gap-3 lg:flex-row lg:items-center">
-      <div className="relative mx-[22px] flex items-center md:mx-0">
-        <button
-          type="button"
-          onClick={() => scrollStrip(-1)}
-          disabled={!canScrollLeft}
-          aria-label="Scroll presets left"
-          className={`${scrollButtonClass} left-0 -translate-x-1/2`}
-        >
-          <ChevronLeft size={20} aria-hidden="true" />
-        </button>
-        <div ref={stripRef} onScroll={updateScrollState} className="flex flex-nowrap justify-[safe_center] gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 px-5 snap-x md:px-2" role="group" aria-label="Date range presets">
+      <FilterSelect
+        label="Date range preset"
+        value={preset}
+        onChange={handlePresetSelect}
+        options={[
+          ...PRESETS.map((option) => ({ value: option.value, label: option.label })),
+          { value: 'custom', label: 'Custom' }
+        ]}
+        className="w-full md:hidden"
+      />
+      <div className="hidden md:flex flex-wrap gap-2 rounded-lg bg-brand-subtle p-2" role="group" aria-label="Date range presets">
         {PRESETS.map((option) => (
           <button
             key={option.value}
@@ -119,16 +105,6 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
           className={chipClass(preset === 'custom')}
         >
           Custom
-        </button>
-        </div>
-        <button
-          type="button"
-          onClick={() => scrollStrip(1)}
-          disabled={!canScrollRight}
-          aria-label="Scroll presets right"
-          className={`${scrollButtonClass} right-0 translate-x-1/2`}
-        >
-          <ChevronRight size={20} aria-hidden="true" />
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
