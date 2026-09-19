@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import Dashboard from './pages/Dashboard'
 import Inventory from './pages/Inventory'
 import POS from './pages/POS'
+import StockMovements from './pages/StockMovements'
 import Transactions from './pages/Transactions'
 import Login from './pages/Login'
 import { LoadingSpinner } from './components'
@@ -21,6 +22,12 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { path: '/', label: 'Dashboard', element: <Dashboard />, roles: ['admin', 'manager'] },
   { path: '/inventory', label: 'Inventory', element: <Inventory />, roles: ['admin', 'manager'] },
+  {
+    path: '/stock-movements',
+    label: 'Stock Movements',
+    element: <StockMovements />,
+    roles: ['admin', 'manager']
+  },
   { path: '/pos', label: 'Point of Sale', element: <POS />, roles: ['admin', 'cashier', 'manager'] },
   {
     path: '/transactions',

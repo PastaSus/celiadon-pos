@@ -1,0 +1,698 @@
+diff --git a/_bmad-output/implementation-artifacts/sprint-status.yaml b/_bmad-output/implementation-artifacts/sprint-status.yaml
+index 9b5c77e..0f31df3 100644
+--- a/_bmad-output/implementation-artifacts/sprint-status.yaml
++++ b/_bmad-output/implementation-artifacts/sprint-status.yaml
+@@ -26,7 +26,7 @@ development_status:
+   2-2-product-search: review
+   2-3-category-stock-filters: done
+   2-4-reorder-levels-badges: review
+-  2-5-stock-movements: backlog
++  2-5-stock-movements: in-progress
+ 
+   # Epic 3: Take the money, and prove it
+   epic-3: backlog
+diff --git a/client/src/App.tsx b/client/src/App.tsx
+index 47ad5c7..5c1e931 100644
+--- a/client/src/App.tsx
++++ b/client/src/App.tsx
+@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
+ import Dashboard from './pages/Dashboard'
+ import Inventory from './pages/Inventory'
+ import POS from './pages/POS'
++import StockMovements from './pages/StockMovements'
+ import Transactions from './pages/Transactions'
+ import Login from './pages/Login'
+ import { LoadingSpinner } from './components'
+@@ -21,6 +22,12 @@ interface NavItem {
+ const NAV_ITEMS: NavItem[] = [
+   { path: '/', label: 'Dashboard', element: <Dashboard />, roles: ['admin', 'manager'] },
+   { path: '/inventory', label: 'Inventory', element: <Inventory />, roles: ['admin', 'manager'] },
++  {
++    path: '/stock-movements',
++    label: 'Stock Movements',
++    element: <StockMovements />,
++    roles: ['admin', 'manager']
++  },
+   { path: '/pos', label: 'Point of Sale', element: <POS />, roles: ['admin', 'cashier', 'manager'] },
+   {
+     path: '/transactions',
+diff --git a/server/index.ts b/server/index.ts
+index 967c221..7e69c23 100644
+--- a/server/index.ts
++++ b/server/index.ts
+@@ -6,6 +6,7 @@ import productsRouter from './routes/products';
+ import categoriesRouter from './routes/categories';
+ import salesRouter from './routes/sales';
+ import dashboardRouter from './routes/dashboard';
++import stockRouter from './routes/stock';
+ 
+ dotenv.config();
+ 
+@@ -21,6 +22,7 @@ app.use('/api/products', productsRouter);
+ app.use('/api/categories', categoriesRouter);
+ app.use('/api/sales', salesRouter);
+ app.use('/api/dashboard', dashboardRouter);
++app.use('/api/stock', stockRouter);
+ 
+ app.get('/api/health', (_req, res) => {
+   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+diff --git a/server/routes/products.ts b/server/routes/products.ts
+index b42f958..64c3e5f 100644
+--- a/server/routes/products.ts
++++ b/server/routes/products.ts
+@@ -138,28 +138,59 @@ router.put(
+         res.status(400).json({ error: 'category_id must be an integer or null' });
+         return;
+       }
+-      // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP, so updated_at is set here.
+-      const { rows } = await pool.query(
+-        `UPDATE products
+-            SET name = $1, price = $2, stock_quantity = $3, category_id = $4,
+-                reorder_level = $5, updated_at = NOW()
+-          WHERE id = $6
+-      RETURNING *`,
+-        [
+-          valid.name.trim(),
+-          valid.price,
+-          valid.stock_quantity,
+-          categoryInt,
+-          reorderInt,
+-          req.params.id
+-        ]
+-      );
+-      const product = rows[0] as Product | undefined;
+-      if (!product) {
+-        res.status(404).json({ error: 'Product not found' });
+-        return;
++      // A changed quantity is a stock change, so it has to be recorded (FR24).
++      // Both writes share one transaction (AD-3) so the history can never
++      // disagree with the product row it describes, and an unchanged quantity
++      // records nothing.
++      const client = await pool.connect();
++      try {
++        await client.query('BEGIN');
++        // FOR UPDATE locks the row and supplies the previous quantity the delta
++        // is measured against; it is also how a missing product is detected
++        // before anything is written.
++        const { rows: existing } = await client.query(
++          'SELECT stock_quantity FROM products WHERE id = $1 FOR UPDATE',
++          [req.params.id]
++        );
++        const previous = existing[0] as { stock_quantity: number } | undefined;
++        if (!previous) {
++          await client.query('ROLLBACK');
++          res.status(404).json({ error: 'Product not found' });
++          return;
++        }
++        // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP, so updated_at is set here.
++        const { rows } = await client.query(
++          `UPDATE products
++              SET name = $1, price = $2, stock_quantity = $3, category_id = $4,
++                  reorder_level = $5, updated_at = NOW()
++            WHERE id = $6
++        RETURNING *`,
++          [
++            valid.name.trim(),
++            valid.price,
++            valid.stock_quantity,
++            categoryInt,
++            reorderInt,
++            req.params.id
++          ]
++        );
++        const product = rows[0] as Product;
++        const delta = product.stock_quantity - previous.stock_quantity;
++        if (delta !== 0) {
++          await client.query(
++            `INSERT INTO stock_movements (product_id, type, quantity, reason, user_id)
++             VALUES ($1, 'adjustment', $2, $3, $4)`,
++            [product.id, delta, 'Stock edited in Inventory', req.user!.id]
++          );
++        }
++        await client.query('COMMIT');
++        res.json(product);
++      } catch (error) {
++        await client.query('ROLLBACK');
++        throw error;
++      } finally {
++        client.release();
+       }
+-      res.json(product);
+     } catch (error) {
+       console.error('Error updating product:', error);
+       res.status(500).json({ error: 'Failed to update product' });
+diff --git a/shared/types.ts b/shared/types.ts
+index 42aea57..5b5145d 100644
+--- a/shared/types.ts
++++ b/shared/types.ts
+@@ -65,10 +65,14 @@ export interface StockMovement {
+   id: number;
+   product_id: number;
+   type: StockMovementType;
++  /** The signed delta, not the resulting quantity: negative means stock left. */
+   quantity: number;
+   reason: string | null;
+   user_id: number | null;
+   created_at: string;
++  /* Joined for display on the list response; absent on a bare inserted row. */
++  product_name?: string;
++  user_email?: string | null;
+ }
+ 
+ export interface DashboardStats {
+diff --git a/client/src/pages/StockMovements.tsx b/client/src/pages/StockMovements.tsx
+new file mode 100644
+index 0000000..a015a71
+--- /dev/null
++++ b/client/src/pages/StockMovements.tsx
+@@ -0,0 +1,350 @@
++import { useEffect, useRef, useState } from 'react'
++import type { Product, StockMovement, StockMovementType } from '../../../shared/types'
++import { fetchApi } from '../lib/api'
++import { Badge, Button, FilterSelect, LoadingSpinner, Modal, SearchInput, Table, useToast } from '../components'
++import type { Column, Tone } from '../components'
++
++const EMPTY_FORM = { product_id: '', type: 'restock' as StockMovementType, quantity: '', reason: '' }
++
++const TYPE_LABELS: Record<StockMovementType, string> = {
++  sale: 'Sale',
++  restock: 'Restock',
++  adjustment: 'Adjustment',
++  return: 'Return'
++}
++
++// An adjustment carries no judgment, and neither does a sale - DESIGN.md is
++// explicit that an adjustment gets no color. Stock coming back in is the only
++// positive signal, so it is the only type that earns the commit tone. Direction
++// lives in the signed delta column, never in the color alone.
++const TYPE_TONES: Record<StockMovementType, Tone> = {
++  sale: 'gray',
++  restock: 'green',
++  adjustment: 'gray',
++  return: 'green'
++}
++
++// Hand-recordable types, mirroring the API's MANUAL_TYPES: a sale movement is
++// written by the sale transaction, never by a person filling in a form.
++const MANUAL_TYPES: StockMovementType[] = ['restock', 'adjustment', 'return']
++
++export default function StockMovements() {
++  const toast = useToast()
++  const [movements, setMovements] = useState<StockMovement[]>([])
++  const [products, setProducts] = useState<Product[]>([])
++  const [loading, setLoading] = useState(true)
++  const [searchText, setSearchText] = useState('')
++  const [searchQuery, setSearchQuery] = useState('')
++  const [productFilter, setProductFilter] = useState('all')
++  const [typeFilter, setTypeFilter] = useState('all')
++  const [showModal, setShowModal] = useState(false)
++  const [formData, setFormData] = useState(EMPTY_FORM)
++  const [saving, setSaving] = useState(false)
++  // Monotonic request id: a slow earlier filter never overwrites fresher rows.
++  const listSeq = useRef(0)
++
++  // Filters go to the server rather than being applied here, unlike Inventory's
++  // in-memory row filter: movement history grows without bound and is never all
++  // loaded just to be narrowed afterwards.
++  const loadMovements = () => {
++    const my = ++listSeq.current
++    const params = new URLSearchParams()
++    if (productFilter !== 'all') params.set('product_id', productFilter)
++    if (typeFilter !== 'all') params.set('type', typeFilter)
++    if (searchQuery !== '') params.set('search', searchQuery)
++    const query = params.toString()
++    fetchApi<StockMovement[]>(`/stock/movements${query === '' ? '' : `?${query}`}`)
++      .then((rows) => {
++        if (my === listSeq.current) setMovements(rows)
++      })
++      .catch((error) => {
++        toast.error(error instanceof Error ? error.message : 'Failed to load stock movements')
++      })
++      .finally(() => {
++        if (my === listSeq.current) setLoading(false)
++      })
++  }
++
++  const loadProducts = () =>
++    fetchApi<Product[]>('/products')
++      .then(setProducts)
++      .catch((error) => {
++        toast.error(error instanceof Error ? error.message : 'Failed to load products')
++      })
++
++  useEffect(() => {
++    loadProducts()
++    // toast's identity is stable, so this still runs once on mount.
++  }, [toast])
++
++  useEffect(() => {
++    loadMovements()
++  }, [searchQuery, productFilter, typeFilter, toast])
++
++  const filtersActive = searchQuery !== '' || productFilter !== 'all' || typeFilter !== 'all'
++
++  // One click restores the unfiltered list, search term included (UX-DR26).
++  const clearFilters = () => {
++    setSearchText('')
++    setSearchQuery('')
++    setProductFilter('all')
++    setTypeFilter('all')
++  }
++
++  const openModal = () => {
++    setFormData(EMPTY_FORM)
++    setShowModal(true)
++  }
++
++  const closeModal = () => {
++    setShowModal(false)
++    setFormData(EMPTY_FORM)
++  }
++
++  const selectedProduct = products.find((product) => String(product.id) === formData.product_id)
++
++  const handleSubmit = async (e: React.FormEvent) => {
++    e.preventDefault()
++    setSaving(true)
++    try {
++      await fetchApi('/stock/movements', {
++        method: 'POST',
++        body: JSON.stringify({
++          product_id: Number(formData.product_id),
++          type: formData.type,
++          quantity: parseInt(formData.quantity, 10),
++          reason: formData.reason
++        })
++      })
++      toast.success('Stock movement recorded')
++      closeModal()
++      // The movement moved a quantity, so both the history and the product list
++      // behind it are reloaded (UX-DR23).
++      loadMovements()
++      loadProducts()
++    } catch (error) {
++      toast.error(error instanceof Error ? error.message : 'Failed to record stock movement')
++    } finally {
++      setSaving(false)
++    }
++  }
++
++  const columns: Column<StockMovement>[] = [
++    {
++      key: 'created_at',
++      header: 'When',
++      render: (movement) => (
++        <span className="text-sm text-slate-500">
++          {new Date(movement.created_at).toLocaleString()}
++        </span>
++      )
++    },
++    {
++      key: 'product',
++      header: 'Product',
++      render: (movement) => (
++        <span className="font-medium text-slate-900">{movement.product_name ?? 'Deleted product'}</span>
++      )
++    },
++    {
++      key: 'type',
++      header: 'Type',
++      render: (movement) => (
++        <Badge tone={TYPE_TONES[movement.type]}>{TYPE_LABELS[movement.type]}</Badge>
++      )
++    },
++    {
++      key: 'quantity',
++      header: 'Change',
++      align: 'right',
++      render: (movement) => (
++        <span className={`tabular-nums ${movement.quantity > 0 ? 'text-commit' : 'text-slate-600'}`}>
++          {movement.quantity > 0 ? `+${movement.quantity}` : movement.quantity}
++        </span>
++      )
++    },
++    {
++      key: 'user',
++      header: 'Who',
++      render: (movement) => (
++        <span className="text-sm text-slate-500">{movement.user_email ?? 'Unknown user'}</span>
++      )
++    },
++    {
++      key: 'reason',
++      header: 'Note',
++      render: (movement) => (
++        <span className="text-sm text-slate-500">{movement.reason ?? 'No reason recorded'}</span>
++      )
++    }
++  ]
++
++  if (loading) {
++    return <LoadingSpinner />
++  }
++
++  return (
++    <div>
++      <div className="flex justify-between items-center mb-6">
++        <h1 className="text-2xl font-bold text-slate-800">Stock Movements</h1>
++        {/* Nothing to restock before a product exists, so the action is absent
++            rather than rendered disabled (UX-DR25). */}
++        {products.length > 0 && <Button onClick={openModal}>Record movement</Button>}
++      </div>
++
++      <div className="mb-6">
++        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
++          <div className="sm:flex-1 sm:max-w-md">
++            <SearchInput
++              value={searchText}
++              onChange={setSearchText}
++              onSearch={setSearchQuery}
++              placeholder="Search products..."
++            />
++          </div>
++          <FilterSelect
++            label="Product filter"
++            value={productFilter}
++            onChange={setProductFilter}
++            options={[
++              { value: 'all', label: 'All products' },
++              ...products.map((product) => ({
++                value: String(product.id),
++                label: product.name
++              }))
++            ]}
++            className="sm:w-56"
++          />
++          <FilterSelect
++            label="Type filter"
++            value={typeFilter}
++            onChange={setTypeFilter}
++            options={[
++              { value: 'all', label: 'All types' },
++              ...Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))
++            ]}
++            className="sm:w-44"
++          />
++          {filtersActive && (
++            <Button variant="secondary" size="sm" onClick={clearFilters}>
++              Clear filters
++            </Button>
++          )}
++        </div>
++        {filtersActive && (
++          <p aria-live="polite" className="text-sm text-slate-500 mt-2">
++            {movements.length} {movements.length === 1 ? 'result' : 'results'}
++            {searchQuery !== '' && ` for \u201C${searchQuery}\u201D`}
++          </p>
++        )}
++      </div>
++
++      <Table
++        columns={columns}
++        rows={movements}
++        rowKey={(movement) => movement.id}
++        emptyMessage={
++          filtersActive ? 'No stock movements match this filter' : 'No stock movements yet.'
++        }
++      />
++
++      <Modal open={showModal} title="Record movement" onClose={closeModal}>
++        <form onSubmit={handleSubmit}>
++          <div className="mb-4">
++            <label
++              htmlFor="movement-product"
++              className="block text-sm font-medium text-slate-700 mb-1"
++            >
++              Product
++              <span aria-hidden="true" className="text-danger"> *</span>
++            </label>
++            <select
++              id="movement-product"
++              value={formData.product_id}
++              onChange={(e) => setFormData({ ...formData, product_id: e.target.value })}
++              className="w-full border-line-strong border rounded-lg px-3 py-2 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand"
++              required
++            >
++              <option value="">Select a product</option>
++              {products.map((product) => (
++                <option key={product.id} value={String(product.id)}>
++                  {product.name} — {product.stock_quantity} in stock
++                </option>
++              ))}
++            </select>
++          </div>
++          <div className="mb-4">
++            <label htmlFor="movement-type" className="block text-sm font-medium text-slate-700 mb-1">
++              Type
++              <span aria-hidden="true" className="text-danger"> *</span>
++            </label>
++            <select
++              id="movement-type"
++              value={formData.type}
++              onChange={(e) =>
++                setFormData({ ...formData, type: e.target.value as StockMovementType })
++              }
++              className="w-full border-line-strong border rounded-lg px-3 py-2 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand"
++            >
++              {MANUAL_TYPES.map((type) => (
++                <option key={type} value={type}>
++                  {TYPE_LABELS[type]}
++                </option>
++              ))}
++            </select>
++          </div>
++          <div className="mb-4">
++            <label
++              htmlFor="movement-quantity"
++              className="block text-sm font-medium text-slate-700 mb-1"
++            >
++              New quantity
++              <span aria-hidden="true" className="text-danger"> *</span>
++            </label>
++            <input
++              id="movement-quantity"
++              type="number"
++              min="0"
++              step="1"
++              value={formData.quantity}
++              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
++              className="w-full border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
++              required
++            />
++            <p className="mt-1 text-sm text-slate-500">
++              {selectedProduct
++                ? `Currently ${selectedProduct.stock_quantity} in stock.`
++                : 'The quantity the shelf should hold when this is done.'}
++            </p>
++          </div>
++          <div className="mb-6">
++            <label
++              htmlFor="movement-reason"
++              className="block text-sm font-medium text-slate-700 mb-1"
++            >
++              Reason
++              <span aria-hidden="true" className="text-danger"> *</span>
++            </label>
++            <input
++              id="movement-reason"
++              type="text"
++              value={formData.reason}
++              onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
++              placeholder="Weekly delivery, stocktake correction, damaged in transit"
++              className="w-full border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
++              required
++            />
++          </div>
++          <div className="flex justify-end gap-3">
++            <Button type="button" variant="secondary" onClick={closeModal}>
++              Cancel
++            </Button>
++            <Button type="submit" disabled={saving}>
++              {saving ? 'Recording...' : 'Record movement'}
++            </Button>
++          </div>
++        </form>
++      </Modal>
++    </div>
++  )
++}
+diff --git a/server/routes/stock.ts b/server/routes/stock.ts
+new file mode 100644
+index 0000000..c8150ba
+--- /dev/null
++++ b/server/routes/stock.ts
+@@ -0,0 +1,174 @@
++import { Router, Response } from 'express';
++import pool from '../db';
++import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth';
++import type { StockMovementType } from '../../shared/types';
++
++const router = Router();
++
++// Types a person may record by hand. 'sale' is written by the sale transaction
++// (FR28, Story 3.2), so this endpoint refuses it rather than letting a sale be
++// fabricated through the stock API.
++const MANUAL_TYPES: StockMovementType[] = ['restock', 'adjustment', 'return'];
++
++// What the list may be filtered by - every type in the vocabulary, because
++// 'sale' rows will exist once the sale transaction starts writing them.
++const FILTER_TYPES: StockMovementType[] = [...MANUAL_TYPES, 'sale'];
++
++// Movement history is a report, so cashiers are excluded (CAP-1, FR4) and the
++// surface is kept out of their nav for the same reason.
++const REPORT_ROLES = requireRole('admin', 'manager');
++
++// List movements newest first, joined to the product name and the responsible
++// user's email so the surface can answer who, why, and when in one request
++// (FR26). Filtering happens here rather than in the client: movement history
++// grows without bound, so it is never all loaded to be filtered afterwards.
++router.get('/movements', requireAuth, REPORT_ROLES, async (req: AuthedRequest, res: Response) => {
++  try {
++    // Only fixed fragments and placeholder indexes are interpolated into the
++    // SQL below; every value travels in the params array (AD-2).
++    const conditions: string[] = [];
++    const params: unknown[] = [];
++
++    const rawProduct = typeof req.query.product_id === 'string' ? req.query.product_id : '';
++    if (rawProduct !== '') {
++      // A non-numeric id would reach pg as garbage and surface as a 500.
++      if (!/^\d+$/.test(rawProduct)) {
++        res.status(400).json({ error: 'product_id must be a positive integer' });
++        return;
++      }
++      params.push(Number(rawProduct));
++      conditions.push(`sm.product_id = $${params.length}`);
++    }
++
++    const rawType = typeof req.query.type === 'string' ? req.query.type : '';
++    if (rawType !== '') {
++      if (!FILTER_TYPES.includes(rawType as StockMovementType)) {
++        res.status(400).json({ error: 'type must be one of sale, restock, adjustment, return' });
++        return;
++      }
++      params.push(rawType);
++      conditions.push(`sm.type = $${params.length}`);
++    }
++
++    const rawSearch = typeof req.query.search === 'string' ? req.query.search.trim() : '';
++    if (rawSearch !== '') {
++      // LIKE wildcards in the term are escaped so a literal % or _ never acts
++      // as one, matching the products route's search contract.
++      const term = rawSearch.replace(/([\\%_])/g, '\\$1');
++      params.push(`%${term}%`);
++      conditions.push(`p.name ILIKE $${params.length} ESCAPE '\\'`);
++    }
++
++    const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
++    const { rows } = await pool.query(
++      `SELECT sm.id, sm.product_id, sm.type, sm.quantity, sm.reason, sm.user_id, sm.created_at,
++              p.name AS product_name, u.email AS user_email
++         FROM stock_movements sm
++         JOIN products p ON p.id = sm.product_id
++    LEFT JOIN users u ON u.id = sm.user_id
++              ${where}
++        ORDER BY sm.created_at DESC, sm.id DESC`,
++      params
++    );
++    res.json(rows);
++  } catch (error) {
++    console.error('Error fetching stock movements:', error);
++    res.status(500).json({ error: 'Failed to fetch stock movements' });
++  }
++});
++
++// Record a restock, adjustment, or return.
++//
++// The caller sends the quantity the product should have *afterwards*
++// (EXPERIENCE.md Flow 2: "entering the new quantity with a reason"); the row
++// stores the delta, which is what FR24 asks a movement to carry. Entering the
++// counted total rather than a difference is also how a stocktake actually
++// works, and it removes the sign question from the person at the shelf.
++router.post('/movements', requireAuth, REPORT_ROLES, async (req: AuthedRequest, res: Response) => {
++  // One dedicated client, so the quantity and its movement are one unit of work
++  // (AD-3): a recorded movement must never describe a change that did not
++  // happen, and a change must never go unrecorded.
++  const client = await pool.connect();
++  try {
++    await client.query('BEGIN');
++
++    const { product_id, type, quantity, reason } = req.body;
++
++    if (!Number.isInteger(product_id)) {
++      await client.query('ROLLBACK');
++      res.status(400).json({ error: 'product_id must be an integer' });
++      return;
++    }
++    if (!MANUAL_TYPES.includes(type)) {
++      await client.query('ROLLBACK');
++      res.status(400).json({ error: 'type must be one of restock, adjustment, return' });
++      return;
++    }
++    if (!Number.isInteger(quantity) || quantity < 0) {
++      await client.query('ROLLBACK');
++      res.status(400).json({ error: 'quantity must be an integer >= 0' });
++      return;
++    }
++    const note = typeof reason === 'string' ? reason.trim() : '';
++    if (note === '') {
++      await client.query('ROLLBACK');
++      res.status(400).json({ error: 'A reason is required' });
++      return;
++    }
++
++    // FOR UPDATE holds the row for the rest of the transaction, so a concurrent
++    // sale cannot land between this read and the write below.
++    const { rows: current } = await client.query(
++      'SELECT name, stock_quantity FROM products WHERE id = $1 FOR UPDATE',
++      [product_id]
++    );
++    const product = current[0] as { name: string; stock_quantity: number } | undefined;
++    if (!product) {
++      await client.query('ROLLBACK');
++      res.status(404).json({ error: 'Product not found' });
++      return;
++    }
++
++    const delta = quantity - product.stock_quantity;
++    if (delta === 0) {
++      await client.query('ROLLBACK');
++      res.status(400).json({
++        error: `${product.name} is already at ${product.stock_quantity}; nothing to record`
++      });
++      return;
++    }
++    // A restock or return that removes stock is a mislabeled row, which is the
++    // exact kind of lie this table exists to prevent.
++    if (delta < 0 && type !== 'adjustment') {
++      await client.query('ROLLBACK');
++      res.status(400).json({
++        error: `A ${type} must increase the quantity; record an adjustment to reduce it`
++      });
++      return;
++    }
++
++    await client.query('UPDATE products SET stock_quantity = $1, updated_at = NOW() WHERE id = $2', [
++      quantity,
++      product_id
++    ]);
++    const { rows } = await client.query(
++      `INSERT INTO stock_movements (product_id, type, quantity, reason, user_id)
++       VALUES ($1, $2, $3, $4, $5)
++       RETURNING *`,
++      [product_id, type, delta, note, req.user!.id]
++    );
++
++    await client.query('COMMIT');
++    // The bare row has no joined product name or user email; the surface
++    // refetches the list, so a partial row is never rendered.
++    res.status(201).json(rows[0]);
++  } catch (error) {
++    await client.query('ROLLBACK');
++    console.error('Error recording stock movement:', error);
++    res.status(500).json({ error: 'Failed to record stock movement' });
++  } finally {
++    client.release();
++  }
++});
++
++export default router;

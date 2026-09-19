@@ -6,6 +6,7 @@ import productsRouter from './routes/products';
 import categoriesRouter from './routes/categories';
 import salesRouter from './routes/sales';
 import dashboardRouter from './routes/dashboard';
+import stockRouter from './routes/stock';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/api/products', productsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/sales', salesRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/stock', stockRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });

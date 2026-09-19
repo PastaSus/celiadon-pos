@@ -26,7 +26,7 @@ development_status:
   2-2-product-search: review
   2-3-category-stock-filters: done
   2-4-reorder-levels-badges: review
-  2-5-stock-movements: backlog
+  2-5-stock-movements: review
 
   # Epic 3: Take the money, and prove it
   epic-3: backlog
