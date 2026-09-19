@@ -43,8 +43,8 @@ development_status:
   4-4-low-stock-callout: review
 
   # Epic 5: Works at the counter, on a phone or tablet
-  epic-5: backlog
-  5-1-hamburger-nav: backlog
+  epic-5: in-progress
+  5-1-hamburger-nav: review
   5-2-cart-drawer: backlog
   5-3-responsive-stacking: backlog
   5-4-cart-persistence: backlog
