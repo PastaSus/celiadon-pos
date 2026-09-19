@@ -96,11 +96,11 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
           onClick={() => scrollStrip(-1)}
           disabled={!canScrollLeft}
           aria-label="Scroll presets left"
-          className={`${scrollButtonClass} left-1`}
+          className={`${scrollButtonClass} left-0`}
         >
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
-        <div ref={stripRef} onScroll={updateScrollState} className="flex flex-nowrap gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 snap-x scroll-px-12" role="group" aria-label="Date range presets">
+        <div ref={stripRef} onScroll={updateScrollState} className="flex flex-nowrap gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 px-11 snap-x lg:px-2" role="group" aria-label="Date range presets">
         {PRESETS.map((option) => (
           <button
             key={option.value}
@@ -126,7 +126,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
           onClick={() => scrollStrip(1)}
           disabled={!canScrollRight}
           aria-label="Scroll presets right"
-          className={`${scrollButtonClass} right-1`}
+          className={`${scrollButtonClass} right-0`}
         >
           <ChevronRight size={20} aria-hidden="true" />
         </button>
