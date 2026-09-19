@@ -138,28 +138,59 @@ router.put(
         res.status(400).json({ error: 'category_id must be an integer or null' });
         return;
       }
-      // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP, so updated_at is set here.
-      const { rows } = await pool.query(
-        `UPDATE products
-            SET name = $1, price = $2, stock_quantity = $3, category_id = $4,
-                reorder_level = $5, updated_at = NOW()
-          WHERE id = $6
-      RETURNING *`,
-        [
-          valid.name.trim(),
-          valid.price,
-          valid.stock_quantity,
-          categoryInt,
-          reorderInt,
-          req.params.id
-        ]
-      );
-      const product = rows[0] as Product | undefined;
-      if (!product) {
-        res.status(404).json({ error: 'Product not found' });
-        return;
+      // A changed quantity is a stock change, so it has to be recorded (FR24).
+      // Both writes share one transaction (AD-3) so the history can never
+      // disagree with the product row it describes, and an unchanged quantity
+      // records nothing.
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        // FOR UPDATE locks the row and supplies the previous quantity the delta
+        // is measured against; it is also how a missing product is detected
+        // before anything is written.
+        const { rows: existing } = await client.query(
+          'SELECT stock_quantity FROM products WHERE id = $1 FOR UPDATE',
+          [req.params.id]
+        );
+        const previous = existing[0] as { stock_quantity: number } | undefined;
+        if (!previous) {
+          await client.query('ROLLBACK');
+          res.status(404).json({ error: 'Product not found' });
+          return;
+        }
+        // PostgreSQL has no ON UPDATE CURRENT_TIMESTAMP, so updated_at is set here.
+        const { rows } = await client.query(
+          `UPDATE products
+              SET name = $1, price = $2, stock_quantity = $3, category_id = $4,
+                  reorder_level = $5, updated_at = NOW()
+            WHERE id = $6
+        RETURNING *`,
+          [
+            valid.name.trim(),
+            valid.price,
+            valid.stock_quantity,
+            categoryInt,
+            reorderInt,
+            req.params.id
+          ]
+        );
+        const product = rows[0] as Product;
+        const delta = product.stock_quantity - previous.stock_quantity;
+        if (delta !== 0) {
+          await client.query(
+            `INSERT INTO stock_movements (product_id, type, quantity, reason, user_id)
+             VALUES ($1, 'adjustment', $2, $3, $4)`,
+            [product.id, delta, 'Stock edited in Inventory', req.user!.id]
+          );
+        }
+        await client.query('COMMIT');
+        res.json(product);
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
       }
-      res.json(product);
     } catch (error) {
       console.error('Error updating product:', error);
       res.status(500).json({ error: 'Failed to update product' });

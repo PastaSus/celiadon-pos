@@ -65,10 +65,14 @@ export interface StockMovement {
   id: number;
   product_id: number;
   type: StockMovementType;
+  /** The signed delta, not the resulting quantity: negative means stock left. */
   quantity: number;
   reason: string | null;
   user_id: number | null;
   created_at: string;
+  /* Joined for display on the list response; absent on a bare inserted row. */
+  product_name?: string;
+  user_email?: string | null;
 }
 
 export interface DashboardStats {

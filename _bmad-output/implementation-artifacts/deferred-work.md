@@ -16,3 +16,6 @@
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-4-reorder-levels-badges.md`
   summary: Allow tuning reorder levels inline from the Inventory table for bulk editing.
   evidence: Story 2.4 puts the threshold in the Add/Edit Product modal, so retuning a whole category costs one modal round trip per product. The inline-table alternative was offered and not chosen during planning because it adds a second mutation path and per-row save state; revisit only if bulk tuning proves tedious in use.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-5-stock-movements.md`
+  summary: Preserve stock-movement history when a product is deleted, instead of cascading it away.
+  evidence: `stock_movements.product_id` is `REFERENCES products(id) ON DELETE CASCADE` (server/db.sql:57), so deleting a product erases every movement that explained its quantity — the exact question the Stock Movements surface exists to answer. Story 2.5 documented the cascade as accepted rather than changing the schema, since a soft-delete or an archive flag is a product decision, not a filter. Revisit if history retention becomes a requirement.
