@@ -59,13 +59,13 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
   };
 
   const chipClass = (active: boolean) =>
-    `inline-flex min-h-[44px] items-center rounded-full px-4 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
+    `inline-flex min-h-[44px] shrink-0 snap-start items-center rounded-full px-4 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
       active ? 'bg-brand text-white' : 'bg-white text-brand-strong hover:bg-brand-surface'
     }`;
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="flex flex-wrap gap-2 rounded-lg bg-brand-subtle p-2" role="group" aria-label="Date range presets">
+      <div className="flex flex-nowrap gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 snap-x" role="group" aria-label="Date range presets">
         {PRESETS.map((option) => (
           <button
             key={option.value}
