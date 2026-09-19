@@ -67,7 +67,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
     stripRef.current?.scrollBy({ left: direction * 160, behavior: 'smooth' });
   };
 
-  const scrollButtonClass = `absolute top-1/2 z-10 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-full bg-white text-brand-strong shadow transition-colors hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-white lg:hidden`;
+  const scrollButtonClass = `absolute top-1/2 z-10 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-full bg-white text-brand-strong shadow transition-colors hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-white md:hidden`;
 
   const applyPreset = (days: number, value: RangePreset) => {
     onChange({ from: shiftISODate(today, -(days - 1)), to: today }, value);
@@ -90,7 +90,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="relative mx-[22px] flex items-center lg:mx-0">
+      <div className="relative mx-[22px] flex items-center md:mx-0">
         <button
           type="button"
           onClick={() => scrollStrip(-1)}
@@ -100,7 +100,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
         >
           <ChevronLeft size={20} aria-hidden="true" />
         </button>
-        <div ref={stripRef} onScroll={updateScrollState} className="flex flex-nowrap gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 px-5 snap-x lg:px-2" role="group" aria-label="Date range presets">
+        <div ref={stripRef} onScroll={updateScrollState} className="flex flex-nowrap gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 px-5 snap-x md:px-2" role="group" aria-label="Date range presets">
         {PRESETS.map((option) => (
           <button
             key={option.value}
