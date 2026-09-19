@@ -20,12 +20,13 @@ import type {
   RevenueGranularity,
   RevenueTrendResponse,
   Sale,
+  SummaryResponse,
   TopProduct,
   TopProductsResponse
 } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { ChartPanel, LoadingSpinner, Table, useToast } from '../components'
-import type { Column } from '../components'
+import { ChartPanel, DateRangeBar, LoadingSpinner, StatCard, Table, defaultRange, useToast } from '../components'
+import type { Column, DateRange, RangePreset } from '../components'
 
 const GRANULARITIES: RevenueGranularity[] = ['daily', 'weekly', 'monthly']
 
@@ -97,6 +98,11 @@ export default function Dashboard() {
   const [mixLoading, setMixLoading] = useState(true)
   const [mixError, setMixError] = useState(false)
   const [trendError, setTrendError] = useState(false)
+  const [range, setRange] = useState<DateRange>(() => defaultRange())
+  const [preset, setPreset] = useState<RangePreset>('30')
+  const [summary, setSummary] = useState<SummaryResponse['data'] | null>(null)
+
+  const rangeQuery = `from=${range.from}&to=${range.to}`
 
   useEffect(() => {
     fetchApi<DashboardStats>('/dashboard')
@@ -110,7 +116,7 @@ export default function Dashboard() {
   useEffect(() => {
     let cancelled = false
     setTrendLoading(true)
-    fetchApi<RevenueTrendResponse>(`/reports/revenue-trend?granularity=${granularity}`)
+    fetchApi<RevenueTrendResponse>(`/reports/revenue-trend?granularity=${granularity}&${rangeQuery}`)
       .then((response) => {
         if (!cancelled) {
           setTrend(response.data)
@@ -132,12 +138,12 @@ export default function Dashboard() {
     return () => {
       cancelled = true
     }
-  }, [granularity, toast])
+  }, [granularity, rangeQuery, toast])
 
   useEffect(() => {
     let cancelled = false
     setTopLoading(true)
-    fetchApi<TopProductsResponse>('/reports/top-products')
+    fetchApi<TopProductsResponse>(`/reports/top-products?${rangeQuery}`)
       .then((response) => {
         if (!cancelled) {
           setTopProducts(response.data)
@@ -159,12 +165,12 @@ export default function Dashboard() {
     return () => {
       cancelled = true
     }
-  }, [toast])
+  }, [rangeQuery, toast])
 
   useEffect(() => {
     let cancelled = false
     setMixLoading(true)
-    fetchApi<PaymentMixResponse>('/reports/payment-mix')
+    fetchApi<PaymentMixResponse>(`/reports/payment-mix?${rangeQuery}`)
       .then((response) => {
         if (!cancelled) {
           setMix(response.data)
@@ -185,7 +191,26 @@ export default function Dashboard() {
     return () => {
       cancelled = true
     }
-  }, [toast])
+  }, [rangeQuery, toast])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchApi<SummaryResponse>(`/reports/summary?${rangeQuery}`)
+      .then((response) => {
+        if (!cancelled) {
+          setSummary(response.data)
+        }
+      })
+      .catch((error) => {
+        // Keep previous good data on screen; surface the server's message.
+        if (!cancelled) {
+          toast.error(error instanceof Error ? error.message : 'Failed to load summary')
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [rangeQuery, toast])
 
   if (loading) {
     return <LoadingSpinner />
@@ -200,6 +225,13 @@ export default function Dashboard() {
     { label: 'Current Inventory', value: String(stats.current_inventory), color: 'bg-commit' },
     { label: 'Total Sales', value: String(stats.total_sales), color: 'bg-slate-500' },
     { label: 'Total Revenue', value: formatCurrency(stats.total_revenue), color: 'bg-brand' }
+  ]
+
+  const summaryTiles = [
+    { label: 'Revenue', value: summary ? formatCurrency(summary.total_revenue) : '—', tone: 'bg-brand' },
+    { label: 'Transactions', value: summary ? String(summary.transaction_count) : '—', tone: 'bg-teal' },
+    { label: 'Average sale', value: summary ? formatCurrency(summary.average_sale) : '—', tone: 'bg-commit' },
+    { label: 'Items sold', value: summary ? String(summary.items_sold) : '—', tone: 'bg-slate-500' }
   ]
 
   const columns: Column<Sale>[] = [
@@ -273,7 +305,28 @@ export default function Dashboard() {
     <div>
       <h1 className="text-2xl font-bold text-slate-800 mb-6">Dashboard</h1>
 
+      <div className="mb-6">
+        <DateRangeBar
+          from={range.from}
+          to={range.to}
+          preset={preset}
+          onChange={(next, nextPreset) => {
+            setRange(next)
+            setPreset(nextPreset)
+          }}
+        />
+      </div>
+
+      {/* Key numbers for the selected range */}
+      <h2 className="text-lg font-semibold text-slate-800 mb-4">For the selected range</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {summaryTiles.map((tile) => (
+          <StatCard key={tile.label} label={tile.label} value={tile.value} toneClass={tile.tone} />
+        ))}
+      </div>
+
       {/* Stats Cards */}
+      <h2 className="text-lg font-semibold text-slate-800 mb-4">All time</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {statCards.map((stat) => (
           <div key={stat.label} className="bg-white rounded-lg shadow-md p-6">
@@ -355,7 +408,10 @@ export default function Dashboard() {
       </div>
 
       {/* Top products and payment mix */}
-      <p className="text-sm text-slate-500 mb-4">Showing the last 12 months.</p>
+      <p className="text-sm text-slate-500 mb-4">
+        Showing {new Date(`${range.from}T00:00:00`).toLocaleDateString()} to{' '}
+        {new Date(`${range.to}T00:00:00`).toLocaleDateString()}.
+      </p>
       <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartPanel
           title="Top products"

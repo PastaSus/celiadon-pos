@@ -17,8 +17,7 @@ const GRANULARITY_SQL: Record<RevenueGranularity, { trunc: string; interval: str
   monthly: { trunc: 'month', interval: '1 month' },
 };
 
-function windowForGranularity(granularity: RevenueGranularity): { start: string; end: string } {
-  const end = new Date();
+function windowForGranularity(granularity: RevenueGranularity): { start: string; end: string } {  const end = new Date();
   const start = new Date(end);
   if (granularity === 'monthly') {
     // Anchor to the first of the month 11 months back so the default view is
@@ -36,9 +35,31 @@ function windowForGranularity(granularity: RevenueGranularity): { start: string;
   return { start: start.toISOString(), end: end.toISOString() };
 }
 
-// Revenue-over-time for the dashboard chart (Story 4.1). Fixed server-side
-// window (last 12 months); granularity only changes bucketing. Zero-filled
-// buckets oldest-first; sales-less windows return all-zero buckets.
+// Optional ?from&?to (ISO calendar days, inclusive) narrow the fixed window.
+// Story 4.3 owns ranges; omitted, malformed, or inverted values keep the
+// fallback so the endpoint never errors on its window.
+function parseRange(
+  query: { from?: unknown; to?: unknown },
+  fallback: { start: string; end: string }
+): { start: string; end: string } {
+  if (typeof query.from === 'string' && query.from.length > 0 && typeof query.to === 'string' && query.to.length > 0) {
+    const start = new Date(
+      query.from.length === 10 ? `${query.from}T00:00:00.000Z` : query.from
+    );
+    const end = new Date(
+      query.to.length === 10 ? `${query.to}T23:59:59.999Z` : query.to
+    );
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime()) && start <= end) {
+      return { start: start.toISOString(), end: end.toISOString() };
+    }
+  }
+  return fallback;
+}
+
+// Revenue-over-time for the dashboard chart (Story 4.1). Optional ?from&?to
+// narrow the fixed 12-month window (Story 4.3); granularity only changes
+// bucketing. Zero-filled buckets oldest-first; sales-less windows return
+// all-zero buckets.
 router.get(
   '/revenue-trend',
   requireAuth,
@@ -58,7 +79,17 @@ router.get(
     }
 
     const { trunc, interval } = GRANULARITY_SQL[granularity];
-    const { start, end } = windowForGranularity(granularity);
+    const { start, end } = parseRange(req.query, windowForGranularity(granularity));
+
+    // A daily bucket per day is only readable over short spans; longer ranges
+    // belong to coarser granularities. The 12-month fallback always passes.
+    if (
+      granularity === 'daily' &&
+      new Date(end).getTime() - new Date(start).getTime() > 366 * 86400000
+    ) {
+      res.status(400).json({ error: 'Daily granularity supports ranges up to 366 days' });
+      return;
+    }
 
     try {
       const { rows } = await pool.query(
@@ -90,14 +121,14 @@ router.get(
   }
 );
 
-// Top 5 products by revenue over the same fixed window as the trend chart
-// (Story 4.2). No range params — Story 4.3 owns ranges.
+// Top 5 products by revenue over the trend chart's window, narrowed by the
+// same optional ?from&?to (Story 4.2, ranges Story 4.3).
 router.get(
   '/top-products',
   requireAuth,
   requireRole('admin', 'manager'),
-  async (_req: AuthedRequest, res: Response) => {
-    const { start, end } = windowForGranularity('monthly');
+  async (req: AuthedRequest, res: Response) => {
+    const { start, end } = parseRange(req.query, windowForGranularity('monthly'));
 
     try {
       const { rows } = await pool.query(
@@ -132,14 +163,15 @@ router.get(
   }
 );
 
-// Revenue split by payment method over the same fixed window (Story 4.2).
+// Revenue split by payment method over the trend chart's window, narrowed by
+// the same optional ?from&?to (Story 4.2, ranges Story 4.3).
 // Legacy NULL methods are excluded so the three shares sum to 100%.
 router.get(
   '/payment-mix',
   requireAuth,
   requireRole('admin', 'manager'),
-  async (_req: AuthedRequest, res: Response) => {
-    const { start, end } = windowForGranularity('monthly');
+  async (req: AuthedRequest, res: Response) => {
+    const { start, end } = parseRange(req.query, windowForGranularity('monthly'));
 
     try {
       const { rows } = await pool.query(
@@ -167,6 +199,50 @@ router.get(
     } catch (error) {
       console.error('Error fetching payment mix:', error);
       res.status(500).json({ error: 'Failed to fetch payment mix' });
+    }
+  }
+);
+
+// Key numbers for the chosen period (Story 4.3). Same optional ?from&?to,
+// same guards; average is derived in JS so a zero-transaction window reads 0,
+// not NULL.
+router.get(
+  '/summary',
+  requireAuth,
+  requireRole('admin', 'manager'),
+  async (req: AuthedRequest, res: Response) => {
+    const { start, end } = parseRange(req.query, windowForGranularity('monthly'));
+
+    try {
+      const { rows } = await pool.query(
+        `SELECT (SELECT COUNT(*)::int FROM sales s
+                 WHERE s.transaction_date >= $1::timestamptz
+                   AND s.transaction_date <= $2::timestamptz) AS transaction_count,
+                (SELECT COALESCE(SUM(s.total_amount), 0)::float FROM sales s
+                 WHERE s.transaction_date >= $1::timestamptz
+                   AND s.transaction_date <= $2::timestamptz) AS total_revenue,
+                (SELECT COALESCE(SUM(sd.quantity), 0)::int FROM sales_details sd
+                 JOIN sales s ON s.id = sd.sale_id
+                 WHERE s.transaction_date >= $1::timestamptz
+                   AND s.transaction_date <= $2::timestamptz) AS items_sold`,
+        [start, end]
+      );
+
+      const row = rows[0] as { transaction_count: number; total_revenue: number; items_sold: number };
+      const transaction_count = Number(row.transaction_count);
+      const total_revenue = Number(row.total_revenue);
+
+      res.json({
+        data: {
+          total_revenue,
+          transaction_count,
+          average_sale: transaction_count > 0 ? total_revenue / transaction_count : 0,
+          items_sold: Number(row.items_sold)
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching summary:', error);
+      res.status(500).json({ error: 'Failed to fetch summary' });
     }
   }
 );

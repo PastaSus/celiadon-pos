@@ -115,6 +115,17 @@ export interface PaymentMixResponse {
   data: PaymentMixSlice[];
 }
 
+export interface RangeSummary {
+  total_revenue: number;
+  transaction_count: number;
+  average_sale: number;
+  items_sold: number;
+}
+
+export interface SummaryResponse {
+  data: RangeSummary;
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;
