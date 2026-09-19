@@ -8,7 +8,7 @@
 
 generated: 2026-09-18
 source: _bmad-output/planning-artifacts/epics.md
-last_updated: 2026-09-18
+last_updated: 2026-09-19
 
 development_status:
   # Epic 1: The product looks and behaves like one app
@@ -21,10 +21,10 @@ development_status:
   1-6-post-retrofit-verification: review
 
   # Epic 2: Organize the catalog, find anything, know what is low
-  epic-2: backlog
+  epic-2: in-progress
   2-1-category-crud: review
   2-2-product-search: review
-  2-3-category-stock-filters: backlog
+  2-3-category-stock-filters: review
   2-4-reorder-levels-badges: backlog
   2-5-stock-movements: backlog
 

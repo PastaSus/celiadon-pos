@@ -10,3 +10,6 @@
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-1-category-crud.md`
   summary: Harden pre-existing product routes with numeric :id validation and explicit column lists to match the categories route.
   evidence: Story 2.1 review found PUT/DELETE /products/:id pass raw params to pg (500 on garbage input) and use SELECT *; the new categories route guards both, leaving the older file as the inconsistent one.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-3-category-stock-filters.md`
+  summary: Run a palette-wide WCAG AA contrast pass on azure-on-white small text (Button primary, active nav item, the active POS category chip, full-screen surfaces) rather than fixing one component.
+  evidence: Story 2.3 review computed white on azure #1690E8 at 3.39:1, below AA for text under 18.66px bold / 24px. DESIGN.md mandates that pairing and Story 1.5 left it in place, so it is a design-token decision that needs to change once, not a per-component defect.

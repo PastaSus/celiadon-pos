@@ -1,7 +1,10 @@
 export { default as Badge, stockTone } from './Badge';
 export type { Tone } from './Badge';
 export { default as Button } from './Button';
+export { default as CategoryChips } from './CategoryChips';
 export { default as EmptyState } from './EmptyState';
+export { default as FilterSelect } from './FilterSelect';
+export type { FilterOption } from './FilterSelect';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as SearchInput } from './SearchInput';
 export { default as Modal } from './Modal';

@@ -1,10 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import type { Category, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, EmptyState, LoadingSpinner, Modal, SearchInput, Table, stockTone, useToast } from '../components'
+import { Badge, Button, EmptyState, FilterSelect, LoadingSpinner, Modal, SearchInput, Table, stockTone, useToast } from '../components'
 import type { Column } from '../components'
 
-const EMPTY_FORM = { name: '', price: '', stock_quantity: '' }
+const EMPTY_FORM = { name: '', price: '', stock_quantity: '', category_id: '' }
+
+// Values double as the `?stock=` deep-link vocabulary the Dashboard's low-stock
+// callout points at (FR27), so the URL and the filter state never diverge.
+const STOCK_FILTERS = [
+  { value: 'all', label: 'All stock' },
+  { value: 'in-stock', label: 'In stock' },
+  { value: 'low', label: 'Low stock' },
+  { value: 'out-of-stock', label: 'Out of stock' }
+] as const
+
+type StockFilter = (typeof STOCK_FILTERS)[number]['value']
+
+function readStockFilter(raw: string | null): StockFilter {
+  return STOCK_FILTERS.some((option) => option.value === raw) ? (raw as StockFilter) : 'all'
+}
 
 export default function Inventory() {
   const toast = useToast()
@@ -30,6 +46,29 @@ export default function Inventory() {
   // Full catalog for the category delete warning, independent of the
   // search-filtered products list shown in the table.
   const [categoryScopeProducts, setCategoryScopeProducts] = useState<Product[]>([])
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Read once from the URL so a deep link lands on a pre-filtered list (FR27).
+  const [categoryFilter, setCategoryFilter] = useState(() => {
+    const raw = searchParams.get('category')
+    // Only a numeric id can name a category; anything else would leave the
+    // select and the list disagreeing about what is actually filtered.
+    return raw !== null && /^\d+$/.test(raw) ? raw : 'all'
+  })
+  const [stockFilter, setStockFilter] = useState<StockFilter>(() =>
+    readStockFilter(searchParams.get('stock'))
+  )
+
+  // Keep the URL in step with the filters so a filtered list stays linkable.
+  // `replace` keeps a history entry per filter change out of the back button.
+  useEffect(() => {
+    const next = new URLSearchParams()
+    if (categoryFilter !== 'all') next.set('category', categoryFilter)
+    if (stockFilter !== 'all') next.set('stock', stockFilter)
+    // Compare before navigating: react-router treats a same-value navigation as
+    // a fresh location, which would re-run this effect on every render.
+    if (next.toString() === searchParams.toString()) return
+    setSearchParams(next, { replace: true })
+  }, [categoryFilter, stockFilter, searchParams, setSearchParams])
 
   const loadProducts = (query: string) => {
     const my = ++searchSeq.current
@@ -46,6 +85,8 @@ export default function Inventory() {
 
   useEffect(() => {
     loadProducts('')
+    // The filter row and the product form both need the category list.
+    loadCategories()
     // toast's identity is stable, so this still runs once on mount.
   }, [toast])
 
@@ -55,6 +96,29 @@ export default function Inventory() {
     const query = term.trim()
     setSearchQuery(query)
     loadProducts(query)
+  }
+
+  const filtersActive = searchQuery !== '' || categoryFilter !== 'all' || stockFilter !== 'all'
+
+  // "In stock" is what a cashier can sell (above zero), and low stock is the
+  // subset of it at or below the product's own reorder level, so nothing
+  // sellable is ever hidden by asking for what is available.
+  const visibleProducts = products.filter((product) => {
+    if (categoryFilter !== 'all' && String(product.category_id) !== categoryFilter) return false
+    if (stockFilter === 'in-stock') return product.stock_quantity > 0
+    if (stockFilter === 'low')
+      return product.stock_quantity > 0 && product.stock_quantity <= product.reorder_level
+    if (stockFilter === 'out-of-stock') return product.stock_quantity <= 0
+    return true
+  })
+
+  // One click restores the unfiltered list (UX-DR26) - the search term included.
+  const clearFilters = () => {
+    setSearchText('')
+    setSearchQuery('')
+    setCategoryFilter('all')
+    setStockFilter('all')
+    loadProducts('')
   }
 
   const closeModal = () => {
@@ -74,7 +138,8 @@ export default function Inventory() {
     setFormData({
       name: product.name,
       price: product.price.toString(),
-      stock_quantity: product.stock_quantity.toString()
+      stock_quantity: product.stock_quantity.toString(),
+      category_id: product.category_id === null ? '' : String(product.category_id)
     })
     setShowModal(true)
   }
@@ -86,7 +151,8 @@ export default function Inventory() {
       const data = {
         name: formData.name,
         price: parseFloat(formData.price),
-        stock_quantity: parseInt(formData.stock_quantity, 10)
+        stock_quantity: parseInt(formData.stock_quantity, 10),
+        category_id: formData.category_id === '' ? null : Number(formData.category_id)
       }
 
       if (editingProduct) {
@@ -127,7 +193,13 @@ export default function Inventory() {
   const loadCategories = () => {
     setCategoriesLoading(true)
     fetchApi<Category[]>('/categories')
-      .then(setCategories)
+      .then((rows) => {
+        setCategories(rows)
+        // A deleted category must not leave a filter selected that no longer exists.
+        setCategoryFilter((prev) =>
+          prev === 'all' || rows.some((category) => String(category.id) === prev) ? prev : 'all'
+        )
+      })
       .catch((error) => {
         toast.error(error instanceof Error ? error.message : 'Failed to load categories')
       })
@@ -214,6 +286,16 @@ export default function Inventory() {
       render: (product) => <span className="text-slate-600">{formatCurrency(product.price)}</span>
     },
     {
+      key: 'category',
+      header: 'Category',
+      render: (product) => {
+        const category = categories.find((item) => item.id === product.category_id)
+        if (!category) return <span className="text-sm text-slate-500">Uncategorized</span>
+        // Neutral badge, never azure: azure is reserved for interactive elements.
+        return <Badge tone="gray">{category.name}</Badge>
+      }
+    },
+    {
       key: 'stock',
       header: 'Stock',
       render: (product) => (
@@ -263,27 +345,56 @@ export default function Inventory() {
         </div>
       </div>
 
-      <div className="mb-6 max-w-md">
-        <SearchInput
-          value={searchText}
-          onChange={setSearchText}
-          onSearch={handleSearch}
-          placeholder="Search products..."
-        />
-        {searchQuery !== '' && (
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="sm:flex-1 sm:max-w-md">
+            <SearchInput
+              value={searchText}
+              onChange={setSearchText}
+              onSearch={handleSearch}
+              placeholder="Search products..."
+            />
+          </div>
+          <FilterSelect
+            label="Category filter"
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            options={[
+              { value: 'all', label: 'All categories' },
+              ...categories.map((category) => ({
+                value: String(category.id),
+                label: category.name
+              }))
+            ]}
+            className="sm:w-52"
+          />
+          <FilterSelect
+            label="Stock status filter"
+            value={stockFilter}
+            onChange={(value) => setStockFilter(readStockFilter(value))}
+            options={[...STOCK_FILTERS]}
+            className="sm:w-44"
+          />
+          {filtersActive && (
+            <Button variant="secondary" size="sm" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </div>
+        {filtersActive && (
           <p aria-live="polite" className="text-sm text-slate-500 mt-2">
-            {products.length} {products.length === 1 ? 'result' : 'results'} for &ldquo;
-            {searchQuery}&rdquo;
+            {visibleProducts.length} {visibleProducts.length === 1 ? 'result' : 'results'}
+            {searchQuery !== '' && ` for \u201C${searchQuery}\u201D`}
           </p>
         )}
       </div>
 
       <Table
         columns={columns}
-        rows={products}
+        rows={visibleProducts}
         rowKey={(product) => product.id}
         emptyMessage={
-          searchQuery !== '' ? 'No products match this filter' : 'No products yet. Add your first product!'
+          filtersActive ? 'No products match this filter' : 'No products yet. Add your first product!'
         }
       />
 
@@ -322,6 +433,27 @@ export default function Inventory() {
               className="w-full border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
               required
             />
+          </div>
+          <div className="mb-4">
+            <label
+              htmlFor="product-category"
+              className="block text-sm font-medium text-slate-700 mb-1"
+            >
+              Category
+            </label>
+            <select
+              id="product-category"
+              value={formData.category_id}
+              onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+              className="w-full border-line-strong border rounded-lg px-3 py-2 bg-white text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand"
+            >
+              <option value="">Uncategorized</option>
+              {categories.map((category) => (
+                <option key={category.id} value={String(category.id)}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="mb-6">
             <label htmlFor="product-stock" className="block text-sm font-medium text-slate-700 mb-1">
