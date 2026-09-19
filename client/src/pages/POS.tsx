@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Minus, Plus, X } from 'lucide-react'
-import type { CartItem, Product } from '../../../shared/types'
+import type { CartItem, Category, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, EmptyState, LoadingSpinner, SearchInput, stockTone, useToast } from '../components'
+import { Badge, Button, CategoryChips, EmptyState, LoadingSpinner, SearchInput, stockTone, useToast } from '../components'
 
 export default function POS() {
   const toast = useToast()
@@ -12,14 +12,18 @@ export default function POS() {
   const [processing, setProcessing] = useState(false)
   const [searchText, setSearchText] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoryFilter, setCategoryFilter] = useState('all')
 
   const trimmedQuery = searchQuery.trim()
-  const visibleProducts =
-    trimmedQuery === ''
-      ? products
-      : products.filter((product) =>
-          product.name.toLowerCase().includes(trimmedQuery.toLowerCase())
-        )
+  const filtersActive = categoryFilter !== 'all' || trimmedQuery !== ''
+  // Category and name narrow the already-loaded list in memory, so the grid
+  // never waits on a request (UX-DR6, FR12) and the cart is left untouched.
+  const visibleProducts = products.filter((product) => {
+    if (categoryFilter !== 'all' && String(product.category_id) !== categoryFilter) return false
+    if (trimmedQuery === '') return true
+    return product.name.toLowerCase().includes(trimmedQuery.toLowerCase())
+  })
 
   const loadProducts = () =>
     fetchApi<Product[]>('/products')
@@ -29,8 +33,16 @@ export default function POS() {
       })
       .finally(() => setLoading(false))
 
+  const loadCategories = () =>
+    fetchApi<Category[]>('/categories')
+      .then(setCategories)
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : 'Failed to load categories')
+      })
+
   useEffect(() => {
     loadProducts()
+    loadCategories()
     // toast's identity is stable, so this still runs once on mount.
   }, [toast])
 
@@ -123,13 +135,22 @@ export default function POS() {
             onSearch={setSearchQuery}
             placeholder="Search products..."
           />
-          {trimmedQuery !== '' && (
+          {filtersActive && (
             <p aria-live="polite" className="text-sm text-slate-500 mt-2">
-              {visibleProducts.length} {visibleProducts.length === 1 ? 'result' : 'results'} for
-              &ldquo;{trimmedQuery}&rdquo;
+              {visibleProducts.length} {visibleProducts.length === 1 ? 'result' : 'results'}
+              {trimmedQuery !== '' && ` for \u201C${trimmedQuery}\u201D`}
             </p>
           )}
         </div>
+        {categories.length > 0 && (
+          <div className="mb-4">
+            <CategoryChips
+              categories={categories}
+              selected={categoryFilter}
+              onSelect={setCategoryFilter}
+            />
+          </div>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {visibleProducts.map((product) => {
             const outOfStock = product.stock_quantity <= 0
@@ -158,7 +179,7 @@ export default function POS() {
         </div>
         {visibleProducts.length === 0 && (
           <EmptyState
-            message={trimmedQuery !== '' ? 'No products match your search.' : 'No products available.'}
+            message={filtersActive ? 'No products match this filter.' : 'No products available.'}
           />
         )}
       </div>
