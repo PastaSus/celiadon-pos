@@ -52,6 +52,16 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
       ? (payment_method as PaymentMethod)
       : null;
 
+    if (method === null) {
+      await client.query('ROLLBACK');
+      if (payment_method === undefined || payment_method === null || payment_method === '') {
+        res.status(400).json({ error: 'payment_method is required (cash, card, or e-wallet)' });
+      } else {
+        res.status(400).json({ error: `Invalid payment_method "${payment_method}" (cash, card, or e-wallet)` });
+      }
+      return;
+    }
+
     // Calculate total and verify stock
     let totalAmount = 0;
     const productIds = items.map((item: any) => item.product_id);
