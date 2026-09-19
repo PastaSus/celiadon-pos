@@ -22,7 +22,7 @@ export default function ChartPanel({
 }: ChartPanelProps) {
   return (
     <section className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex items-center justify-between gap-4 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
         <h2 className="text-lg font-semibold text-slate-800">{title}</h2>
         {actions}
       </div>

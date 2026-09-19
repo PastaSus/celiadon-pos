@@ -168,7 +168,7 @@ export default function POS() {
             />
           </div>
         )}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {visibleProducts.map((product) => {
             const outOfStock = product.stock_quantity <= 0
 
@@ -183,7 +183,7 @@ export default function POS() {
                   outOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                 }`}
               >
-                <h3 className="font-semibold text-slate-800">{product.name}</h3>
+                <h3 className="font-semibold text-slate-800 break-words">{product.name}</h3>
                 <p className="text-slate-800 font-bold tabular-nums">{formatCurrency(product.price)}</p>
                 <div className="mt-1">
                   <Badge tone={stockTone(product.stock_quantity, product.reorder_level)}>

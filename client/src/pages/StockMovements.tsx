@@ -185,11 +185,11 @@ export default function StockMovements() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Stock Movements</h1>
         {/* Nothing to restock before a product exists, so the action is absent
             rather than rendered disabled (UX-DR25). */}
-        {products.length > 0 && <Button onClick={openModal}>Record movement</Button>}
+        {products.length > 0 && <Button className="w-full sm:w-auto" onClick={openModal}>Record movement</Button>}
       </div>
 
       <div className="mb-6">

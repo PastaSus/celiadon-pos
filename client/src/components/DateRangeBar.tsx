@@ -86,7 +86,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
           Custom
         </button>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <div>
           <label htmlFor="range-from" className="sr-only">
             Start date
