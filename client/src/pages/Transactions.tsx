@@ -1,8 +1,36 @@
 import { useEffect, useState } from 'react'
-import type { Sale, SaleDetail } from '../../../shared/types'
+import type { PaymentMethod, Sale, SaleDetail } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Button, LoadingSpinner, Modal, Table, useToast } from '../components'
+import { Button, FilterSelect, LoadingSpinner, Modal, Table, useToast } from '../components'
 import type { Column } from '../components'
+
+const PAGE_SIZE = 10
+
+const PAYMENT_FILTERS = [
+  { value: 'all', label: 'All payment methods' },
+  { value: 'cash', label: 'Cash' },
+  { value: 'card', label: 'Card' },
+  { value: 'e-wallet', label: 'E-Wallet' }
+]
+
+function toLocalDateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
+function paymentLabel(method: PaymentMethod | null): string {
+  switch (method) {
+    case 'cash':
+      return 'Cash'
+    case 'card':
+      return 'Card'
+    case 'e-wallet':
+      return 'E-Wallet'
+    default:
+      return '—'
+  }
+}
 
 export default function Transactions() {
   const toast = useToast()
@@ -10,6 +38,9 @@ export default function Transactions() {
   const [loading, setLoading] = useState(true)
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [loadingDetail, setLoadingDetail] = useState(false)
+  const [dateFilter, setDateFilter] = useState(() => toLocalDateKey(new Date()))
+  const [paymentFilter, setPaymentFilter] = useState('all')
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     fetchApi<Sale[]>('/sales')
@@ -19,6 +50,34 @@ export default function Transactions() {
       })
       .finally(() => setLoading(false))
   }, [toast])
+
+  const todayKey = toLocalDateKey(new Date())
+  const filtersActive = dateFilter !== todayKey || paymentFilter !== 'all'
+
+  const filteredSales = sales.filter((sale) => {
+    if (toLocalDateKey(new Date(sale.transaction_date)) !== dateFilter) return false
+    if (paymentFilter !== 'all' && sale.payment_method !== paymentFilter) return false
+    return true
+  })
+
+  const totalPages = Math.max(1, Math.ceil(filteredSales.length / PAGE_SIZE))
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
+
+  const clearFilters = () => {
+    setDateFilter(toLocalDateKey(new Date()))
+    setPaymentFilter('all')
+    setPage(1)
+  }
+
+  const activePaymentLabel = PAYMENT_FILTERS.find((option) => option.value === paymentFilter)?.label ?? ''
+  const activeDateLabel = new Date(`${dateFilter}T00:00:00`).toLocaleDateString()
+  const emptyMessage =
+    sales.length === 0
+      ? 'No transactions yet'
+      : `No transactions on ${activeDateLabel}${paymentFilter !== 'all' ? ` paid by ${activePaymentLabel}` : ''}.`
 
   const viewDetails = async (sale: Sale) => {
     setLoadingDetail(true)
@@ -43,6 +102,13 @@ export default function Transactions() {
       header: 'Amount',
       render: (sale) => (
         <span className="font-bold text-commit">{formatCurrency(sale.total_amount)}</span>
+      )
+    },
+    {
+      key: 'payment_method',
+      header: 'Payment',
+      render: (sale) => (
+        <span className="text-sm text-slate-600">{paymentLabel(sale.payment_method)}</span>
       )
     },
     {
@@ -90,12 +156,77 @@ export default function Transactions() {
     <div>
       <h1 className="text-2xl font-bold text-slate-800 mb-6">Sales Transactions</h1>
 
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div>
+            <label htmlFor="transaction-date" className="sr-only">
+              Filter by date
+            </label>
+            <input
+              id="transaction-date"
+              type="date"
+              value={dateFilter}
+              max={todayKey}
+              onChange={(e) => {
+                setDateFilter(e.target.value || toLocalDateKey(new Date()))
+                setPage(1)
+              }}
+              className="border-line-strong border rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand"
+            />
+          </div>
+          <FilterSelect
+            label="Payment method filter"
+            value={paymentFilter}
+            onChange={(value) => {
+              setPaymentFilter(value)
+              setPage(1)
+            }}
+            options={[...PAYMENT_FILTERS]}
+            className="sm:w-52"
+          />
+          {filtersActive && (
+            <Button variant="secondary" size="sm" onClick={clearFilters}>
+              Clear filters
+            </Button>
+          )}
+        </div>
+        {filtersActive && (
+          <p aria-live="polite" className="text-sm text-slate-500 mt-2">
+            {filteredSales.length} {filteredSales.length === 1 ? 'result' : 'results'}
+          </p>
+        )}
+      </div>
+
       <Table
         columns={columns}
-        rows={sales}
+        rows={filteredSales.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)}
         rowKey={(sale) => sale.id}
-        emptyMessage="No transactions yet"
+        emptyMessage={emptyMessage}
       />
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span aria-live="polite" className="text-sm text-slate-500">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
 
       <Modal
         open={loadingDetail || selectedSale !== null}
