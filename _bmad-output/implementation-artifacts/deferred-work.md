@@ -16,6 +16,12 @@
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-4-reorder-levels-badges.md`
   summary: Allow tuning reorder levels inline from the Inventory table for bulk editing.
   evidence: Story 2.4 puts the threshold in the Add/Edit Product modal, so retuning a whole category costs one modal round trip per product. The inline-table alternative was offered and not chosen during planning because it adds a second mutation path and per-row save state; revisit only if bulk tuning proves tedious in use.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-3-3-transaction-filters.md`
+  summary: Show an error state with retry on the Transactions page instead of "No transactions yet" when the sales fetch fails.
+  evidence: Blind-hunter review on Story 3-3 confirmed the catch path toasts but leaves sales as [], so a failed load reads as an empty register; pre-existing from the unfiltered list, not caused by the filter change.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-3-3-transaction-filters.md`
+  summary: Ignore or cancel the in-flight transaction-detail fetch when its modal is closed so a late response cannot reopen it.
+  evidence: Blind-hunter review on Story 3-3 confirmed viewDetails sets selectedSale unconditionally on resolve; pre-existing race, untouched by the filter change.
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-5-stock-movements.md`
   summary: Preserve stock-movement history when a product is deleted, instead of cascading it away.
   evidence: `stock_movements.product_id` is `REFERENCES products(id) ON DELETE CASCADE` (server/db.sql:57), so deleting a product erases every movement that explained its quantity — the exact question the Stock Movements surface exists to answer. Story 2.5 documented the cascade as accepted rather than changing the schema, since a soft-delete or an archive flag is a product decision, not a filter. Revisit if history retention becomes a requirement.
