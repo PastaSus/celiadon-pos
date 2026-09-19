@@ -1,0 +1,96 @@
+diff --git a/_bmad-output/implementation-artifacts/sprint-status.yaml b/_bmad-output/implementation-artifacts/sprint-status.yaml
+index e7c0ae4..c2344af 100644
+--- a/_bmad-output/implementation-artifacts/sprint-status.yaml
++++ b/_bmad-output/implementation-artifacts/sprint-status.yaml
+@@ -29,8 +29,8 @@ development_status:
+   2-5-stock-movements: review
+ 
+   # Epic 3: Take the money, and prove it
+-  epic-3: backlog
+-  3-1-payment-method: backlog
++  epic-3: in-progress
++  3-1-payment-method: in-progress
+   3-2-atomic-sale: backlog
+   3-3-transaction-filters: backlog
+   3-4-receipt-view-print: backlog
+diff --git a/client/src/components/index.ts b/client/src/components/index.ts
+index ef42b72..2cc12a3 100644
+--- a/client/src/components/index.ts
++++ b/client/src/components/index.ts
+@@ -8,6 +8,7 @@ export type { FilterOption } from './FilterSelect';
+ export { default as LoadingSpinner } from './LoadingSpinner';
+ export { default as SearchInput } from './SearchInput';
+ export { default as Modal } from './Modal';
++export { default as PaymentMethodControl } from './PaymentMethodControl';
+ export { default as Table } from './Table';
+ export type { Column } from './Table';
+-export { ToastProvider, useToast } from './Toast';
+\ No newline at end of file
++export { ToastProvider, useToast } from './Toast';
+diff --git a/client/src/pages/POS.tsx b/client/src/pages/POS.tsx
+index 8ee7ef4..744f32a 100644
+--- a/client/src/pages/POS.tsx
++++ b/client/src/pages/POS.tsx
+@@ -1,8 +1,8 @@
+ import { useEffect, useState } from 'react'
+ import { Minus, Plus, X } from 'lucide-react'
+-import type { CartItem, Category, Product } from '../../../shared/types'
++import type { CartItem, Category, PaymentMethod, Product } from '../../../shared/types'
+ import { fetchApi, formatCurrency } from '../lib/api'
+-import { Badge, Button, CategoryChips, EmptyState, LoadingSpinner, SearchInput, stockTone, useToast } from '../components'
++import { Badge, Button, CategoryChips, EmptyState, LoadingSpinner, PaymentMethodControl, SearchInput, stockTone, useToast } from '../components'
+ 
+ export default function POS() {
+   const toast = useToast()
+@@ -14,6 +14,7 @@ export default function POS() {
+   const [searchQuery, setSearchQuery] = useState('')
+   const [categories, setCategories] = useState<Category[]>([])
+   const [categoryFilter, setCategoryFilter] = useState('all')
++  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+ 
+   const trimmedQuery = searchQuery.trim()
+   const filtersActive = categoryFilter !== 'all' || trimmedQuery !== ''
+@@ -105,11 +106,12 @@ export default function POS() {
+ 
+       await fetchApi('/sales', {
+         method: 'POST',
+-        body: JSON.stringify({ items })
++        body: JSON.stringify({ items, payment_method: paymentMethod })
+       })
+ 
+       toast.success('Sale completed')
+       setCart([])
++      setPaymentMethod('cash')
+       // Stock changed, so refresh the grid.
+       await loadProducts()
+     } catch (error) {
+@@ -238,6 +240,8 @@ export default function POS() {
+               ))}
+             </div>
+ 
++            <PaymentMethodControl selected={paymentMethod} onSelect={setPaymentMethod} />
++
+             <div className="border-t border-line mt-4 pt-4">
+               <div className="bg-ink rounded-lg p-4 flex justify-between items-center">
+                 <span className="text-white font-bold">Total:</span>
+diff --git a/server/routes/sales.ts b/server/routes/sales.ts
+index 8352826..434a72d 100644
+--- a/server/routes/sales.ts
++++ b/server/routes/sales.ts
+@@ -52,6 +52,16 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
+       ? (payment_method as PaymentMethod)
+       : null;
+ 
++    if (method === null) {
++      await client.query('ROLLBACK');
++      if (payment_method === undefined || payment_method === null || payment_method === '') {
++        res.status(400).json({ error: 'payment_method is required (cash, card, or e-wallet)' });
++      } else {
++        res.status(400).json({ error: `Invalid payment_method "${payment_method}" (cash, card, or e-wallet)` });
++      }
++      return;
++    }
++
+     // Calculate total and verify stock
+     let totalAmount = 0;
+     const productIds = items.map((item: any) => item.product_id);

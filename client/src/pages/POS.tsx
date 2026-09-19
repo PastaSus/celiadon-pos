@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Minus, Plus, X } from 'lucide-react'
-import type { CartItem, Category, Product } from '../../../shared/types'
+import type { CartItem, Category, PaymentMethod, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, CategoryChips, EmptyState, LoadingSpinner, SearchInput, stockTone, useToast } from '../components'
+import { Badge, Button, CategoryChips, EmptyState, LoadingSpinner, PaymentMethodControl, SearchInput, stockTone, useToast } from '../components'
 
 export default function POS() {
   const toast = useToast()
@@ -14,6 +14,7 @@ export default function POS() {
   const [searchQuery, setSearchQuery] = useState('')
   const [categories, setCategories] = useState<Category[]>([])
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
 
   const trimmedQuery = searchQuery.trim()
   const filtersActive = categoryFilter !== 'all' || trimmedQuery !== ''
@@ -105,11 +106,12 @@ export default function POS() {
 
       await fetchApi('/sales', {
         method: 'POST',
-        body: JSON.stringify({ items })
+        body: JSON.stringify({ items, payment_method: paymentMethod })
       })
 
       toast.success('Sale completed')
       setCart([])
+      setPaymentMethod('cash')
       // Stock changed, so refresh the grid.
       await loadProducts()
     } catch (error) {
@@ -237,6 +239,8 @@ export default function POS() {
                 </div>
               ))}
             </div>
+
+            <PaymentMethodControl selected={paymentMethod} onSelect={setPaymentMethod} />
 
             <div className="border-t border-line mt-4 pt-4">
               <div className="bg-ink rounded-lg p-4 flex justify-between items-center">
