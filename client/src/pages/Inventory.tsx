@@ -360,13 +360,13 @@ export default function Inventory() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <h1 className="text-2xl font-bold text-slate-800">Inventory Management</h1>
-        <div className="flex gap-3">
-          <Button variant="secondary" onClick={openCategories}>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button variant="secondary" className="w-full sm:w-auto" onClick={openCategories}>
             Manage categories
           </Button>
-          <Button onClick={openAddModal}>+ Add Product</Button>
+          <Button className="w-full sm:w-auto" onClick={openAddModal}>+ Add Product</Button>
         </div>
       </div>
 
@@ -544,7 +544,7 @@ export default function Inventory() {
       </Modal>
 
       <Modal open={showCategories} title="Manage categories" onClose={closeCategories}>
-        <form onSubmit={handleAddCategory} className="flex gap-3 mb-6">
+        <form onSubmit={handleAddCategory} className="flex flex-wrap gap-3 mb-6">
           <label htmlFor="new-category" className="sr-only">
             New category name
           </label>
@@ -592,7 +592,7 @@ export default function Inventory() {
                       onChange={(e) => setEditCategoryName(e.target.value)}
                       maxLength={255}
                       required
-                      className="flex-1 border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+            className="flex-1 min-w-0 border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
                     />
                     <div className="flex gap-3">
                       <Button type="submit" size="sm" disabled={categorySaving}>

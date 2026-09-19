@@ -371,7 +371,7 @@ export default function Dashboard() {
       {/* Low-stock callout — hidden entirely when nothing is low */}
       {(lowStock.length > 0 || lowFailed) && (
         <section aria-label="Low stock" className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <div className="flex items-center justify-between gap-4 mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
             <h2 className="text-lg font-semibold text-slate-800">
               Low stock ({lowStock.length})
             </h2>
@@ -394,7 +394,7 @@ export default function Dashboard() {
                   <span title={entry.product.name} className="min-w-0 flex-1 truncate text-sm text-slate-800">
                     {entry.product.name}
                   </span>
-                  <span className="flex shrink-0 items-center gap-3">
+                  <span className="flex flex-wrap shrink-0 items-center gap-3">
                     <span className="text-sm tabular-nums text-slate-500">
                       {entry.product.stock_quantity} left · Reorder at {entry.product.reorder_level}
                     </span>
