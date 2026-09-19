@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 export type RangePreset = 'today' | '7' | '30' | '90' | 'custom';
 
 export interface DateRange {
@@ -43,6 +46,28 @@ export function defaultRange(): DateRange {
  */
 export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBarProps) {
   const today = toISODate(new Date());
+  const stripRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const updateScrollState = () => {
+    const strip = stripRef.current;
+    if (!strip) return;
+    setCanScrollLeft(strip.scrollLeft > 0);
+    setCanScrollRight(strip.scrollLeft + strip.clientWidth < strip.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    updateScrollState();
+    window.addEventListener('resize', updateScrollState);
+    return () => window.removeEventListener('resize', updateScrollState);
+  }, []);
+
+  const scrollStrip = (direction: -1 | 1) => {
+    stripRef.current?.scrollBy({ left: direction * 160, behavior: 'smooth' });
+  };
+
+  const scrollButtonClass = `flex shrink-0 items-center justify-center min-h-[44px] min-w-[44px] rounded-full text-brand-strong transition-colors hover:bg-brand-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 disabled:cursor-default disabled:opacity-30 disabled:hover:bg-transparent`;
 
   const applyPreset = (days: number, value: RangePreset) => {
     onChange({ from: shiftISODate(today, -(days - 1)), to: today }, value);
@@ -65,7 +90,17 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="flex flex-nowrap gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 snap-x" role="group" aria-label="Date range presets">
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => scrollStrip(-1)}
+          disabled={!canScrollLeft}
+          aria-label="Scroll presets left"
+          className={scrollButtonClass}
+        >
+          <ChevronLeft size={20} aria-hidden="true" />
+        </button>
+        <div ref={stripRef} onScroll={updateScrollState} className="flex flex-nowrap gap-2 overflow-x-auto rounded-lg bg-brand-subtle p-2 snap-x" role="group" aria-label="Date range presets">
         {PRESETS.map((option) => (
           <button
             key={option.value}
@@ -84,6 +119,16 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
           className={chipClass(preset === 'custom')}
         >
           Custom
+        </button>
+        </div>
+        <button
+          type="button"
+          onClick={() => scrollStrip(1)}
+          disabled={!canScrollRight}
+          aria-label="Scroll presets right"
+          className={scrollButtonClass}
+        >
+          <ChevronRight size={20} aria-hidden="true" />
         </button>
       </div>
       <div className="flex flex-wrap items-center gap-2">
