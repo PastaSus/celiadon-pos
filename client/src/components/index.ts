@@ -1,6 +1,8 @@
 export { default as Badge, stockStatus, stockTone } from './Badge';
 export type { StockStatus, Tone } from './Badge';
 export { default as Button } from './Button';
+export { default as CartDrawer } from './CartDrawer';
+export { default as CartItems, EMPTY_CART_MESSAGE } from './CartItems';
 export { default as CategoryChips } from './CategoryChips';
 export { default as DateRangeBar, defaultRange } from './DateRangeBar';
 export type { DateRange, RangePreset } from './DateRangeBar';

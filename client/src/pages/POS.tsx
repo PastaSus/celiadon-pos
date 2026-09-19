@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Minus, Plus, X } from 'lucide-react'
+import { ShoppingCart } from 'lucide-react'
 import type { CartItem, Category, PaymentMethod, Product, Sale } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, CategoryChips, EmptyState, LoadingSpinner, PaymentMethodControl, SearchInput, stockTone, useToast } from '../components'
+import { Badge, Button, CartDrawer, CartItems, CategoryChips, EMPTY_CART_MESSAGE, EmptyState, LoadingSpinner, PaymentMethodControl, SearchInput, stockTone, useToast } from '../components'
 
 export default function POS() {
   const toast = useToast()
@@ -17,6 +17,17 @@ export default function POS() {
   const [categories, setCategories] = useState<Category[]>([])
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
+  const [cartOpen, setCartOpen] = useState(false)
+
+  // The drawer is a below-lg surface: crossing into desktop always leaves it closed.
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 1024px)')
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setCartOpen(false)
+    }
+    query.addEventListener('change', handleChange)
+    return () => query.removeEventListener('change', handleChange)
+  }, [])
 
   const trimmedQuery = searchQuery.trim()
   const filtersActive = categoryFilter !== 'all' || trimmedQuery !== ''
@@ -92,6 +103,7 @@ export default function POS() {
   }
 
   const total = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+  const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const handleCheckout = async () => {
     if (cart.length === 0) {
@@ -128,8 +140,8 @@ export default function POS() {
     return <LoadingSpinner />
   }
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  const page = (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-24 lg:pb-0">
       {/* Products Grid */}
       <div className="lg:col-span-2">
         <h1 className="text-2xl font-bold text-slate-800 mb-4">Products</h1>
@@ -190,57 +202,19 @@ export default function POS() {
       </div>
 
       {/* Cart */}
-      <div className="bg-white rounded-lg shadow-md p-4 h-fit sticky top-6">
+      <div className="hidden lg:block bg-white rounded-lg shadow-md p-4 h-fit sticky top-6">
         <h2 className="text-xl font-bold text-slate-800 mb-4">Cart</h2>
 
         {cart.length === 0 ? (
-          <p className="text-slate-500 text-center py-8">Click products to add to cart</p>
+          <p className="text-slate-500 text-center py-8">{EMPTY_CART_MESSAGE}</p>
         ) : (
           <>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {cart.map((item) => (
-                <div
-                  key={item.product.id}
-                  className="flex items-center justify-between border-b border-line pb-3"
-                >
-                  <div className="flex-1">
-                    <p className="font-medium">{item.product.name}</p>
-                    <p className="text-sm text-slate-500">
-                      {formatCurrency(item.product.price)} each
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex h-11 w-11 items-center justify-center !p-0"
-                      onClick={() => updateQuantity(item.product.id, -1)}
-                      aria-label={`Decrease quantity of ${item.product.name}`}
-                    >
-                      <Minus size={20} aria-hidden="true" />
-                    </Button>
-                    <span className="w-8 text-center">{item.quantity}</span>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      className="flex h-11 w-11 items-center justify-center !p-0"
-                      onClick={() => updateQuantity(item.product.id, 1)}
-                      aria-label={`Increase quantity of ${item.product.name}`}
-                    >
-                      <Plus size={20} aria-hidden="true" />
-                    </Button>
-                    <Button
-                      variant="dangerGhost"
-                      size="sm"
-                      className="ml-2 flex h-11 w-11 items-center justify-center !p-0"
-                      onClick={() => removeFromCart(item.product.id)}
-                      aria-label={`Remove ${item.product.name} from cart`}
-                    >
-                      <X size={20} aria-hidden="true" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+            <div className="max-h-96 overflow-y-auto">
+              <CartItems
+                items={cart}
+                onUpdateQuantity={updateQuantity}
+                onRemove={removeFromCart}
+              />
             </div>
 
             <PaymentMethodControl selected={paymentMethod} onSelect={setPaymentMethod} />
@@ -266,5 +240,41 @@ export default function POS() {
         )}
       </div>
     </div>
+  )
+
+  return (
+    <>
+      {page}
+      {/* Fixed summary bar — the only cart surface below lg */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-line-strong bg-white px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <button
+          type="button"
+          onClick={() => setCartOpen(true)}
+          aria-label={`Open cart, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}, total ${formatCurrency(total)}`}
+          className="flex min-h-[56px] w-full items-center justify-between rounded-lg bg-ink px-4 text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+        >
+          <span className="flex items-center gap-2 text-sm font-medium">
+            <ShoppingCart size={20} aria-hidden="true" />
+            {itemCount} {itemCount === 1 ? 'item' : 'items'}
+          </span>
+          <span className="text-accent text-xl font-extrabold tabular-nums">
+            {formatCurrency(total)}
+          </span>
+        </button>
+      </div>
+      <CartDrawer
+        open={cartOpen}
+        onClose={() => setCartOpen(false)}
+        cart={cart}
+        paymentMethod={paymentMethod}
+        onPaymentMethod={setPaymentMethod}
+        total={total}
+        itemCount={itemCount}
+        processing={processing}
+        onCheckout={handleCheckout}
+        onUpdateQuantity={updateQuantity}
+        onRemove={removeFromCart}
+      />
+    </>
   )
 }

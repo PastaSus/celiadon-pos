@@ -31,3 +31,6 @@
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-3-4-receipt-view-print.md`
   summary: Distinguish a missing receipt from a failed receipt load with a retry action on the receipt page.
   evidence: Blind-hunter review on Story 3-4 confirmed every fetch failure renders "Receipt not found" with no retry; the toast names the real error, but the page itself conflates transient errors with a genuinely missing id.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-5-2-cart-drawer.md`
+  summary: Extract a shared dialog hook for Modal, NavDrawer, and CartDrawer instead of copying the focus-trap effect.
+  evidence: Blind-hunter review on Story 5-2 confirmed the third copy of the trap/Escape/focus-return effect; behavior is identical today, but the next dialog fix must land in three places.
