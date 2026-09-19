@@ -2,6 +2,7 @@ export { default as Badge, stockStatus, stockTone } from './Badge';
 export type { StockStatus, Tone } from './Badge';
 export { default as Button } from './Button';
 export { default as CategoryChips } from './CategoryChips';
+export { default as ChartPanel } from './ChartPanel';
 export { default as EmptyState } from './EmptyState';
 export { default as FilterSelect } from './FilterSelect';
 export type { FilterOption } from './FilterSelect';
