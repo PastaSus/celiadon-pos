@@ -83,6 +83,17 @@ export interface DashboardStats {
   recent_sales: Sale[];
 }
 
+export type RevenueGranularity = 'daily' | 'weekly' | 'monthly';
+
+export interface RevenueBucket {
+  bucket: string;
+  revenue: number;
+}
+
+export interface RevenueTrendResponse {
+  data: RevenueBucket[];
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;

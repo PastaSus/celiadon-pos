@@ -1,13 +1,53 @@
 import { useEffect, useState } from 'react'
-import type { DashboardStats, Sale } from '../../../shared/types'
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts'
+import type {
+  DashboardStats,
+  RevenueBucket,
+  RevenueGranularity,
+  RevenueTrendResponse,
+  Sale
+} from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { LoadingSpinner, Table, useToast } from '../components'
+import { ChartPanel, LoadingSpinner, Table, useToast } from '../components'
 import type { Column } from '../components'
+
+const GRANULARITIES: RevenueGranularity[] = ['daily', 'weekly', 'monthly']
+
+function formatBucketLabel(bucket: string, granularity: RevenueGranularity): string {
+  const date = new Date(bucket)
+  if (granularity === 'monthly') {
+    return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+  }
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function formatBucketFull(bucket: string, granularity: RevenueGranularity): string {
+  const date = new Date(bucket)
+  if (granularity === 'monthly') {
+    return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  }
+  if (granularity === 'weekly') {
+    return `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+  }
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
 
 export default function Dashboard() {
   const toast = useToast()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
+  const [granularity, setGranularity] = useState<RevenueGranularity>('monthly')
+  const [trend, setTrend] = useState<RevenueBucket[]>([])
+  const [trendLoading, setTrendLoading] = useState(true)
+  const [trendError, setTrendError] = useState(false)
 
   useEffect(() => {
     fetchApi<DashboardStats>('/dashboard')
@@ -17,6 +57,33 @@ export default function Dashboard() {
       })
       .finally(() => setLoading(false))
   }, [toast])
+
+  useEffect(() => {
+    let cancelled = false
+    setTrendLoading(true)
+    fetchApi<RevenueTrendResponse>(`/reports/revenue-trend?granularity=${granularity}`)
+      .then((response) => {
+        if (!cancelled) {
+          setTrend(response.data)
+          setTrendError(false)
+        }
+      })
+      .catch((error) => {
+        // Keep previous good data on screen; surface the server's message.
+        if (!cancelled) {
+          setTrendError(true)
+          toast.error(error instanceof Error ? error.message : 'Failed to load revenue trend')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setTrendLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [granularity, toast])
 
   if (loading) {
     return <LoadingSpinner />
@@ -55,6 +122,9 @@ export default function Dashboard() {
     }
   ]
 
+  const trendIsEmpty = trend.length === 0 || trend.every((point) => point.revenue === 0)
+  const trendTotal = trend.reduce((sum, point) => sum + point.revenue, 0)
+
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-800 mb-6">Dashboard</h1>
@@ -70,6 +140,74 @@ export default function Dashboard() {
             <p className="text-2xl font-bold text-slate-800 mt-2 tabular-nums">{stat.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Revenue Trend */}
+      <div className="mb-8">
+        <ChartPanel
+          title="Revenue trend"
+          loading={trendLoading}
+          isEmpty={!trendLoading && (trendError ? trend.length === 0 : trendIsEmpty)}
+          emptyMessage={trendError ? 'Failed to load revenue trend' : undefined}
+          actions={
+            <div className="flex gap-2" role="group" aria-label="Aggregation">
+              {GRANULARITIES.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setGranularity(option)}
+                  aria-pressed={granularity === option}
+                  className={`rounded-full px-3 py-1 text-sm capitalize transition-colors ${
+                    granularity === option
+                      ? 'bg-brand text-white'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          }
+        >
+          <div
+            role="img"
+            aria-label={`Revenue trend chart, ${granularity} aggregation, ${formatCurrency(trendTotal)} total`}
+            className="h-full w-full text-brand"
+          >
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={trend} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+              <CartesianGrid stroke="#E5E7EB" vertical={false} />
+              <XAxis
+                dataKey="bucket"
+                tickFormatter={(bucket: string) => formatBucketLabel(bucket, granularity)}
+                tick={{ fontSize: 12, fill: '#64748B' }}
+                axisLine={{ stroke: '#E0E0E0' }}
+                tickLine={false}
+                minTickGap={24}
+              />
+              <YAxis
+                tickFormatter={(value: number) => formatCurrency(Number(value))}
+                tick={{ fontSize: 12, fill: '#64748B' }}
+                axisLine={{ stroke: '#E0E0E0' }}
+                tickLine={false}
+                width={90}
+              />
+              <Tooltip
+                formatter={(value) => [formatCurrency(Number(value)), 'Revenue']}
+                labelFormatter={(bucket: string) => formatBucketFull(bucket, granularity)}
+              />
+              <Line
+                type="monotone"
+                dataKey="revenue"
+                name="Revenue"
+                stroke="currentColor"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+          </div>
+        </ChartPanel>
       </div>
 
       {/* Recent Sales */}

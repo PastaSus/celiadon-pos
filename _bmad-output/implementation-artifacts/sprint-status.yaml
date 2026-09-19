@@ -36,8 +36,8 @@ development_status:
   3-4-receipt-view-print: review
 
   # Epic 4: See how the store is doing
-  epic-4: backlog
-  4-1-recharts-revenue-trend: backlog
+  epic-4: in-progress
+  4-1-recharts-revenue-trend: review
   4-2-top-products-payment-mix: backlog
   4-3-key-metrics-date-range: backlog
   4-4-low-stock-callout: backlog
