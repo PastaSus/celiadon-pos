@@ -89,7 +89,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
     }`;
 
   return (
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+    <div className="flex flex-col items-center gap-3 lg:flex-row lg:items-center">
       <div className="relative mx-[22px] flex items-center md:mx-0">
         <button
           type="button"
