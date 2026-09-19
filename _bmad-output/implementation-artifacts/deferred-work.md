@@ -25,6 +25,9 @@
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-2-5-stock-movements.md`
   summary: Preserve stock-movement history when a product is deleted, instead of cascading it away.
   evidence: `stock_movements.product_id` is `REFERENCES products(id) ON DELETE CASCADE` (server/db.sql:57), so deleting a product erases every movement that explained its quantity — the exact question the Stock Movements surface exists to answer. Story 2.5 documented the cascade as accepted rather than changing the schema, since a soft-delete or an archive flag is a product decision, not a filter. Revisit if history retention becomes a requirement.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-4-2-top-products-payment-mix.md`
+  summary: Render the dashboard charts even when the stats fetch fails instead of blocking the whole page behind it.
+  evidence: Blind-hunter review on Story 4-2 confirmed the `if (!stats)` path hides the trend, top-products, and payment-mix sections although their fetches are independent; pre-existing page structure, not caused by the chart additions.
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-3-4-receipt-view-print.md`
   summary: Distinguish a missing receipt from a failed receipt load with a retry action on the receipt page.
   evidence: Blind-hunter review on Story 3-4 confirmed every fetch failure renders "Receipt not found" with no retry; the toast names the real error, but the page itself conflates transient errors with a genuinely missing id.

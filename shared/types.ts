@@ -94,6 +94,27 @@ export interface RevenueTrendResponse {
   data: RevenueBucket[];
 }
 
+export interface TopProduct {
+  product_id: number;
+  product_name: string;
+  quantity: number;
+  revenue: number;
+}
+
+export interface TopProductsResponse {
+  data: TopProduct[];
+}
+
+export interface PaymentMixSlice {
+  method: PaymentMethod;
+  transactions: number;
+  revenue: number;
+}
+
+export interface PaymentMixResponse {
+  data: PaymentMixSlice[];
+}
+
 export interface CartItem {
   product: Product;
   quantity: number;

@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import pool from '../db';
 import { requireAuth, requireRole, AuthedRequest } from '../middleware/auth';
-import type { RevenueGranularity } from '../../shared/types';
+import type { PaymentMethod, RevenueGranularity } from '../../shared/types';
 
 const router = Router();
 
@@ -86,6 +86,87 @@ router.get(
     } catch (error) {
       console.error('Error fetching revenue trend:', error);
       res.status(500).json({ error: 'Failed to fetch revenue trend' });
+    }
+  }
+);
+
+// Top 5 products by revenue over the same fixed window as the trend chart
+// (Story 4.2). No range params — Story 4.3 owns ranges.
+router.get(
+  '/top-products',
+  requireAuth,
+  requireRole('admin', 'manager'),
+  async (_req: AuthedRequest, res: Response) => {
+    const { start, end } = windowForGranularity('monthly');
+
+    try {
+      const { rows } = await pool.query(
+        `SELECT p.id AS product_id, p.name AS product_name,
+                SUM(sd.quantity)::int AS quantity,
+                COALESCE(SUM(sd.subtotal), 0)::float AS revenue
+         FROM sales_details sd
+         JOIN products p ON p.id = sd.product_id
+         JOIN sales s ON s.id = sd.sale_id
+         WHERE s.transaction_date >= $1::timestamptz
+           AND s.transaction_date <= $2::timestamptz
+         GROUP BY p.id, p.name
+         ORDER BY revenue DESC, p.name ASC
+         LIMIT 5`,
+        [start, end]
+      );
+
+      const data = rows.map(
+        (row: { product_id: number; product_name: string; quantity: number; revenue: number }) => ({
+          product_id: Number(row.product_id),
+          product_name: row.product_name,
+          quantity: Number(row.quantity),
+          revenue: Number(row.revenue)
+        })
+      );
+
+      res.json({ data });
+    } catch (error) {
+      console.error('Error fetching top products:', error);
+      res.status(500).json({ error: 'Failed to fetch top products' });
+    }
+  }
+);
+
+// Revenue split by payment method over the same fixed window (Story 4.2).
+// Legacy NULL methods are excluded so the three shares sum to 100%.
+router.get(
+  '/payment-mix',
+  requireAuth,
+  requireRole('admin', 'manager'),
+  async (_req: AuthedRequest, res: Response) => {
+    const { start, end } = windowForGranularity('monthly');
+
+    try {
+      const { rows } = await pool.query(
+        `SELECT s.payment_method AS method,
+                COUNT(*)::int AS transactions,
+                COALESCE(SUM(s.total_amount), 0)::float AS revenue
+         FROM sales s
+         WHERE s.transaction_date >= $1::timestamptz
+           AND s.transaction_date <= $2::timestamptz
+           AND s.payment_method IS NOT NULL
+         GROUP BY s.payment_method
+         ORDER BY s.payment_method`,
+        [start, end]
+      );
+
+      const data = rows.map(
+        (row: { method: PaymentMethod; transactions: number; revenue: number }) => ({
+          method: row.method,
+          transactions: Number(row.transactions),
+          revenue: Number(row.revenue)
+        })
+      );
+
+      res.json({ data });
+    } catch (error) {
+      console.error('Error fetching payment mix:', error);
+      res.status(500).json({ error: 'Failed to fetch payment mix' });
     }
   }
 );
