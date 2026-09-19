@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react'
 import {
   CartesianGrid,
+  Cell,
+  Legend,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -10,16 +14,55 @@ import {
 } from 'recharts'
 import type {
   DashboardStats,
+  PaymentMethod,
+  PaymentMixResponse,
   RevenueBucket,
   RevenueGranularity,
   RevenueTrendResponse,
-  Sale
+  Sale,
+  TopProduct,
+  TopProductsResponse
 } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
 import { ChartPanel, LoadingSpinner, Table, useToast } from '../components'
 import type { Column } from '../components'
 
 const GRANULARITIES: RevenueGranularity[] = ['daily', 'weekly', 'monthly']
+
+// Largest-remainder shares in tenths of a percent so the displayed legend
+// values always sum to exactly 100%.
+function largestRemainderShares(revenues: number[]): number[] {
+  const total = revenues.reduce((sum, value) => sum + value, 0)
+  if (total <= 0) return revenues.map(() => 0)
+  const tenths = revenues.map((revenue) => Math.floor((revenue / total) * 1000))
+  let remainder = 1000 - tenths.reduce((sum, value) => sum + value, 0)
+  const order = revenues
+    .map((revenue, index) => ({ index, frac: (revenue / total) * 1000 - tenths[index] }))
+    .sort((a, b) => b.frac - a.frac)
+  let k = 0
+  while (remainder > 0) {
+    tenths[order[k % order.length].index] += 1
+    remainder -= 1
+    k += 1
+  }
+  return tenths.map((value) => value / 10)
+}
+
+const PAYMENT_METHODS: PaymentMethod[] = ['cash', 'card', 'e-wallet']
+
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  cash: 'Cash',
+  card: 'Card',
+  'e-wallet': 'E-Wallet'
+}
+
+// Slice fills mirror palette tokens (brand/commit/ink) — SVG fills cannot use
+// Tailwind classes, so the hexes live in this one map with their token cited.
+const PAYMENT_FILLS: Record<PaymentMethod, string> = {
+  cash: '#1690E8', // brand
+  card: '#0B7E71', // commit
+  'e-wallet': '#0A1929' // ink
+}
 
 function formatBucketLabel(bucket: string, granularity: RevenueGranularity): string {
   const date = new Date(bucket)
@@ -47,6 +90,12 @@ export default function Dashboard() {
   const [granularity, setGranularity] = useState<RevenueGranularity>('monthly')
   const [trend, setTrend] = useState<RevenueBucket[]>([])
   const [trendLoading, setTrendLoading] = useState(true)
+  const [topProducts, setTopProducts] = useState<TopProduct[]>([])
+  const [topLoading, setTopLoading] = useState(true)
+  const [topError, setTopError] = useState(false)
+  const [mix, setMix] = useState<PaymentMixResponse['data']>([])
+  const [mixLoading, setMixLoading] = useState(true)
+  const [mixError, setMixError] = useState(false)
   const [trendError, setTrendError] = useState(false)
 
   useEffect(() => {
@@ -85,6 +134,59 @@ export default function Dashboard() {
     }
   }, [granularity, toast])
 
+  useEffect(() => {
+    let cancelled = false
+    setTopLoading(true)
+    fetchApi<TopProductsResponse>('/reports/top-products')
+      .then((response) => {
+        if (!cancelled) {
+          setTopProducts(response.data)
+          setTopError(false)
+        }
+      })
+      .catch((error) => {
+        // Keep previous good data on screen; surface the server's message.
+        if (!cancelled) {
+          setTopError(true)
+          toast.error(error instanceof Error ? error.message : 'Failed to load top products')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setTopLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [toast])
+
+  useEffect(() => {
+    let cancelled = false
+    setMixLoading(true)
+    fetchApi<PaymentMixResponse>('/reports/payment-mix')
+      .then((response) => {
+        if (!cancelled) {
+          setMix(response.data)
+          setMixError(false)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setMixError(true)
+          toast.error(error instanceof Error ? error.message : 'Failed to load payment mix')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setMixLoading(false)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [toast])
+
   if (loading) {
     return <LoadingSpinner />
   }
@@ -122,7 +224,49 @@ export default function Dashboard() {
     }
   ]
 
+  const topColumns: Column<TopProduct & { rank: number }>[] = [
+    {
+      key: 'rank',
+      header: 'Rank',
+      render: (row) => row.rank
+    },
+    {
+      key: 'product_name',
+      header: 'Product',
+      render: (row) => row.product_name
+    },
+    {
+      key: 'quantity',
+      header: 'Qty',
+      align: 'right',
+      render: (row) => row.quantity
+    },
+    {
+      key: 'revenue',
+      header: 'Revenue',
+      align: 'right',
+      render: (row) => formatCurrency(row.revenue)
+    }
+  ]
+
   const trendIsEmpty = trend.length === 0 || trend.every((point) => point.revenue === 0)
+
+  const rankedTop = topProducts.map((product, index) => ({ ...product, rank: index + 1 }))
+  const topFailed = topError && topProducts.length === 0
+
+  const mixTotal = mix.reduce((sum, slice) => sum + slice.revenue, 0)
+  const mixRevenues = PAYMENT_METHODS.map(
+    (method) => mix.find((slice) => slice.method === method)?.revenue ?? 0
+  )
+  const mixShares = largestRemainderShares(mixRevenues)
+  const mixRows = PAYMENT_METHODS.map((method, index) => ({
+    method,
+    label: PAYMENT_LABELS[method],
+    revenue: mixRevenues[index],
+    share: mixShares[index]
+  }))
+  const mixIsEmpty = mix.length === 0 || mixTotal === 0
+  const mixFailed = mixError && mix.length === 0
   const trendTotal = trend.reduce((sum, point) => sum + point.revenue, 0)
 
   return (
@@ -206,6 +350,55 @@ export default function Dashboard() {
               />
             </LineChart>
           </ResponsiveContainer>
+          </div>
+        </ChartPanel>
+      </div>
+
+      {/* Top products and payment mix */}
+      <p className="text-sm text-slate-500 mb-4">Showing the last 12 months.</p>
+      <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ChartPanel
+          title="Top products"
+          loading={topLoading}
+          isEmpty={!topLoading && (topFailed || topProducts.length === 0)}
+          emptyMessage={topFailed ? 'Failed to load top products.' : undefined}
+        >
+          <Table
+            columns={topColumns}
+            rows={rankedTop}
+            rowKey={(row) => row.product_id}
+            emptyMessage="No sales in this range"
+          />
+        </ChartPanel>
+
+        <ChartPanel
+          title="Payment mix"
+          loading={mixLoading}
+          isEmpty={!mixLoading && (mixFailed || mixIsEmpty)}
+          emptyMessage={mixFailed ? 'Failed to load payment mix.' : undefined}
+        >
+          <div
+            role="img"
+            aria-label={`Payment mix chart, ${mixRows.map((row) => `${row.label} ${row.share}%`).join(', ')}`}
+            className="h-full w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={mixRows} dataKey="revenue" nameKey="label" outerRadius="80%">
+                  {mixRows.map((row) => (
+                    <Cell key={row.method} fill={PAYMENT_FILLS[row.method]} />
+                  ))}
+                </Pie>
+                <Legend
+                  formatter={(label: string) =>
+                    `${label} · ${mixRows.find((row) => row.label === label)?.share ?? 0}%`
+                  }
+                />
+                <Tooltip
+                  formatter={(value) => [formatCurrency(Number(value)), 'Revenue']}
+                />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         </ChartPanel>
       </div>
