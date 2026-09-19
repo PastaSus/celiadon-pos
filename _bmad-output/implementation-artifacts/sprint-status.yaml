@@ -33,7 +33,7 @@ development_status:
   3-1-payment-method: done
   3-2-atomic-sale: review
   3-3-transaction-filters: backlog
-  3-4-receipt-view-print: backlog
+  3-4-receipt-view-print: review
 
   # Epic 4: See how the store is doing
   epic-4: backlog

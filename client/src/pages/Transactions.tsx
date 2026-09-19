@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { Sale, SaleDetail } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
 import { Button, LoadingSpinner, Modal, Table, useToast } from '../components'
@@ -6,6 +7,7 @@ import type { Column } from '../components'
 
 export default function Transactions() {
   const toast = useToast()
+  const navigate = useNavigate()
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
@@ -136,6 +138,16 @@ export default function Transactions() {
                   {formatCurrency(selectedSale.total_amount)}
                 </span>
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate(`/receipts/${selectedSale.id}`)}
+              >
+                View Receipt
+              </Button>
             </div>
           </div>
         ) : null}

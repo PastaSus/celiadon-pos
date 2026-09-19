@@ -5,6 +5,7 @@ import Inventory from './pages/Inventory'
 import POS from './pages/POS'
 import StockMovements from './pages/StockMovements'
 import Transactions from './pages/Transactions'
+import Receipt from './pages/Receipt'
 import Login from './pages/Login'
 import { LoadingSpinner } from './components'
 import { useAuth } from './contexts/AuthContext'
@@ -96,7 +97,7 @@ function App() {
   return (
     <div className="min-h-screen bg-canvas">
       {/* Navigation */}
-      <nav className="bg-ink">
+      <nav className="bg-ink print:hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -144,6 +145,15 @@ function App() {
               element={<ProtectedRoute roles={item.roles}>{item.element}</ProtectedRoute>}
             />
           ))}
+          {/* Contextual only — no nav item. Any authenticated role may sell, so any role may see its receipt. */}
+          <Route
+            path="/receipts/:id"
+            element={
+              <ProtectedRoute roles={['admin', 'cashier', 'manager']}>
+                <Receipt />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<Navigate to={landingFor(user.role)} replace />} />
         </Routes>
       </main>

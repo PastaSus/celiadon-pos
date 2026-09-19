@@ -9,6 +9,7 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as SearchInput } from './SearchInput';
 export { default as Modal } from './Modal';
 export { default as PaymentMethodControl } from './PaymentMethodControl';
+export { default as ReceiptView } from './ReceiptView';
 export { default as Table } from './Table';
 export type { Column } from './Table';
 export { ToastProvider, useToast } from './Toast';
