@@ -34,3 +34,6 @@
 - source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-5-2-cart-drawer.md`
   summary: Extract a shared dialog hook for Modal, NavDrawer, and CartDrawer instead of copying the focus-trap effect.
   evidence: Blind-hunter review on Story 5-2 confirmed the third copy of the trap/Escape/focus-return effect; behavior is identical today, but the next dialog fix must land in three places.
+- source_spec: `D:\WebDevPersonal\cube-tech-pos/_bmad-output/implementation-artifacts/spec-5-4-cart-persistence.md`
+  summary: Purify the POS cart updaters so no toast fires inside setCart callbacks.
+  evidence: Blind-hunter review on Story 5-4 confirmed toast.error calls inside the addToCart and updateQuantity updaters; harmless in production but impure under double-invoked updaters, predating all Epic 5 work.
