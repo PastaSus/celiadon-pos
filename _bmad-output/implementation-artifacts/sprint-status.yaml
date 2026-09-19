@@ -24,8 +24,8 @@ development_status:
   epic-2: in-progress
   2-1-category-crud: review
   2-2-product-search: review
-  2-3-category-stock-filters: review
-  2-4-reorder-levels-badges: backlog
+  2-3-category-stock-filters: done
+  2-4-reorder-levels-badges: review
   2-5-stock-movements: backlog
 
   # Epic 3: Take the money, and prove it

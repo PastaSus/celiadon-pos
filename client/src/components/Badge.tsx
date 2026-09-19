@@ -19,12 +19,22 @@ export default function Badge({ tone = 'gray', children }: BadgeProps) {
   return <span className={`px-2 py-1 text-xs rounded-full ${TONES[tone]}`}>{children}</span>;
 }
 
+export type StockStatus = 'out' | 'low' | 'healthy';
+
 /**
- * Stock tone driven by the product's own reorder_level rather than a hardcoded
- * threshold, so CAP-5's configurable reordering needs no rewrite here.
+ * The single stock decision, driven by the product's own reorder_level rather
+ * than a hardcoded threshold. Tone and wording both derive from here so a badge,
+ * its label, and the low-stock filter can never disagree.
  */
+export function stockStatus(quantity: number, reorderLevel = 10): StockStatus {
+  if (quantity <= 0) return 'out';
+  if (quantity <= reorderLevel) return 'low';
+  return 'healthy';
+}
+
 export function stockTone(quantity: number, reorderLevel = 10): Tone {
-  if (quantity <= 0) return 'red';
-  if (quantity <= reorderLevel) return 'yellow';
+  const status = stockStatus(quantity, reorderLevel);
+  if (status === 'out') return 'red';
+  if (status === 'low') return 'yellow';
   return 'green';
 }

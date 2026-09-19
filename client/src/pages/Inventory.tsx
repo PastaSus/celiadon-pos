@@ -2,10 +2,18 @@ import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import type { Category, Product } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, Button, EmptyState, FilterSelect, LoadingSpinner, Modal, SearchInput, Table, stockTone, useToast } from '../components'
-import type { Column } from '../components'
+import { Badge, Button, EmptyState, FilterSelect, LoadingSpinner, Modal, SearchInput, Table, stockStatus, stockTone, useToast } from '../components'
+import type { Column, StockStatus } from '../components'
 
-const EMPTY_FORM = { name: '', price: '', stock_quantity: '', category_id: '' }
+const EMPTY_FORM = { name: '', price: '', stock_quantity: '', category_id: '', reorder_level: '10' }
+
+// The stock cell keeps the bare quantity and names the status for screen
+// readers, so badge colour is never the only way to read a stock value.
+const STOCK_STATUS_LABEL: Record<StockStatus, string> = {
+  out: 'out of stock',
+  low: 'low stock',
+  healthy: 'in stock'
+}
 
 // Values double as the `?stock=` deep-link vocabulary the Dashboard's low-stock
 // callout points at (FR27), so the URL and the filter state never diverge.
@@ -102,13 +110,15 @@ export default function Inventory() {
 
   // "In stock" is what a cashier can sell (above zero), and low stock is the
   // subset of it at or below the product's own reorder level, so nothing
-  // sellable is ever hidden by asking for what is available.
+  // sellable is ever hidden by asking for what is available. The status comes
+  // from the same helper the badge uses, so the filter and the column behind it
+  // can never contradict each other.
   const visibleProducts = products.filter((product) => {
     if (categoryFilter !== 'all' && String(product.category_id) !== categoryFilter) return false
-    if (stockFilter === 'in-stock') return product.stock_quantity > 0
-    if (stockFilter === 'low')
-      return product.stock_quantity > 0 && product.stock_quantity <= product.reorder_level
-    if (stockFilter === 'out-of-stock') return product.stock_quantity <= 0
+    const status = stockStatus(product.stock_quantity, product.reorder_level)
+    if (stockFilter === 'in-stock') return status !== 'out'
+    if (stockFilter === 'low') return status === 'low'
+    if (stockFilter === 'out-of-stock') return status === 'out'
     return true
   })
 
@@ -139,7 +149,8 @@ export default function Inventory() {
       name: product.name,
       price: product.price.toString(),
       stock_quantity: product.stock_quantity.toString(),
-      category_id: product.category_id === null ? '' : String(product.category_id)
+      category_id: product.category_id === null ? '' : String(product.category_id),
+      reorder_level: product.reorder_level.toString()
     })
     setShowModal(true)
   }
@@ -152,7 +163,10 @@ export default function Inventory() {
         name: formData.name,
         price: parseFloat(formData.price),
         stock_quantity: parseInt(formData.stock_quantity, 10),
-        category_id: formData.category_id === '' ? null : Number(formData.category_id)
+        category_id: formData.category_id === '' ? null : Number(formData.category_id),
+        // Always sent: PUT is a full-record replace, so omitting the key would
+        // silently reset a tuned threshold to the server's default of 10.
+        reorder_level: parseInt(formData.reorder_level, 10)
       }
 
       if (editingProduct) {
@@ -298,10 +312,21 @@ export default function Inventory() {
     {
       key: 'stock',
       header: 'Stock',
+      render: (product) => {
+        const status = stockStatus(product.stock_quantity, product.reorder_level)
+        return (
+          <Badge tone={stockTone(product.stock_quantity, product.reorder_level)}>
+            {product.stock_quantity}
+            <span className="sr-only"> {STOCK_STATUS_LABEL[status]}</span>
+          </Badge>
+        )
+      }
+    },
+    {
+      key: 'reorder_level',
+      header: 'Reorder at',
       render: (product) => (
-        <Badge tone={stockTone(product.stock_quantity, product.reorder_level)}>
-          {product.stock_quantity}
-        </Badge>
+        <span className="text-sm text-slate-600 tabular-nums">{product.reorder_level}</span>
       )
     },
     {
@@ -455,7 +480,7 @@ export default function Inventory() {
               ))}
             </select>
           </div>
-          <div className="mb-6">
+          <div className="mb-4">
             <label htmlFor="product-stock" className="block text-sm font-medium text-slate-700 mb-1">
               Stock Quantity
               <span aria-hidden="true" className="text-danger"> *</span>
@@ -469,6 +494,25 @@ export default function Inventory() {
               className="w-full border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
               required
             />
+          </div>
+          <div className="mb-6">
+            <label htmlFor="product-reorder" className="block text-sm font-medium text-slate-700 mb-1">
+              Reorder Level
+              <span aria-hidden="true" className="text-danger"> *</span>
+            </label>
+            <input
+              id="product-reorder"
+              type="number"
+              min="0"
+              step="1"
+              value={formData.reorder_level}
+              onChange={(e) => setFormData({ ...formData, reorder_level: e.target.value })}
+              className="w-full border-line-strong border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand"
+              required
+            />
+            <p className="mt-1 text-sm text-slate-500">
+              Warn when stock is at or below this quantity.
+            </p>
           </div>
           <div className="flex justify-end gap-3">
             <Button type="button" variant="secondary" onClick={closeModal}>
