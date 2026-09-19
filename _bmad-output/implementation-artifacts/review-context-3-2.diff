@@ -1,0 +1,65 @@
+diff --git a/_bmad-output/implementation-artifacts/sprint-status.yaml b/_bmad-output/implementation-artifacts/sprint-status.yaml
+index a0b5ec5..2b2e861 100644
+--- a/_bmad-output/implementation-artifacts/sprint-status.yaml
++++ b/_bmad-output/implementation-artifacts/sprint-status.yaml
+@@ -30,8 +30,8 @@ development_status:
+ 
+   # Epic 3: Take the money, and prove it
+   epic-3: in-progress
+-  3-1-payment-method: review
+-  3-2-atomic-sale: backlog
++  3-1-payment-method: done
++  3-2-atomic-sale: in-progress
+   3-3-transaction-filters: backlog
+   3-4-receipt-view-print: backlog
+ 
+diff --git a/server/routes/sales.ts b/server/routes/sales.ts
+index 434a72d..7fdcc4d 100644
+--- a/server/routes/sales.ts
++++ b/server/routes/sales.ts
+@@ -62,14 +62,17 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
+       return;
+     }
+ 
+-    // Calculate total and verify stock
++    // Calculate total and verify stock. FOR UPDATE holds every sold row for
++    // the rest of this transaction, so two concurrent checkouts cannot both
++    // pass the stock check before either decrements (FR28, NFR4).
+     let totalAmount = 0;
+     const productIds = items.map((item: any) => item.product_id);
+     // The old driver expanded an array placeholder automatically; pg needs
+     // an explicit array, so the ids arrive as one $1 typed as int[] instead.
+-    const { rows: products } = await client.query('SELECT * FROM products WHERE id = ANY($1::int[])', [
+-      productIds
+-    ]);
++    const { rows: products } = await client.query(
++      'SELECT * FROM products WHERE id = ANY($1::int[]) FOR UPDATE',
++      [productIds]
++    );
+     const productMap = new Map(products.map((p: any) => [p.id, p]));
+ 
+     for (const item of items) {
+@@ -95,7 +98,11 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
+     );
+     const saleId = saleRows[0].id;
+ 
+-    // Create sale details and update stock
++    // Create sale details, decrement stock, and record the movement. All
++    // three writes share this transaction, so a failed sale leaves no partial
++    // rows behind (FR28). The movement carries the 2.5 row shape — product,
++    // type, signed delta, reason, user, timestamp — with type 'sale' and a
++    // negative quantity, which 2.5's list already filters and renders.
+     for (const item of items) {
+       const product = productMap.get(item.product_id)!;
+       const unitPrice = Number(product.price);
+@@ -107,6 +114,10 @@ router.post('/', requireAuth, async (req: AuthedRequest, res: Response) => {
+         item.quantity,
+         item.product_id
+       ]);
++      await client.query(
++        'INSERT INTO stock_movements (product_id, type, quantity, reason, user_id) VALUES ($1, $2, $3, $4, $5)',
++        [item.product_id, 'sale', -item.quantity, `Sale ${receiptNumber}`, req.user!.id]
++      );
+     }
+ 
+     await client.query('COMMIT');
