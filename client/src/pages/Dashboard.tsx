@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   CartesianGrid,
   Cell,
@@ -16,6 +17,7 @@ import type {
   DashboardStats,
   PaymentMethod,
   PaymentMixResponse,
+  Product,
   RevenueBucket,
   RevenueGranularity,
   RevenueTrendResponse,
@@ -25,7 +27,7 @@ import type {
   TopProductsResponse
 } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { ChartPanel, DateRangeBar, LoadingSpinner, StatCard, Table, defaultRange, useToast } from '../components'
+import { Badge, ChartPanel, DateRangeBar, LoadingSpinner, StatCard, Table, defaultRange, stockStatus, stockTone, useToast } from '../components'
 import type { Column, DateRange, RangePreset } from '../components'
 
 const GRANULARITIES: RevenueGranularity[] = ['daily', 'weekly', 'monthly']
@@ -101,6 +103,8 @@ export default function Dashboard() {
   const [range, setRange] = useState<DateRange>(() => defaultRange())
   const [preset, setPreset] = useState<RangePreset>('30')
   const [summary, setSummary] = useState<SummaryResponse['data'] | null>(null)
+  const [lowProducts, setLowProducts] = useState<Product[]>([])
+  const [lowError, setLowError] = useState(false)
 
   const rangeQuery = `from=${range.from}&to=${range.to}`
 
@@ -192,6 +196,26 @@ export default function Dashboard() {
       cancelled = true
     }
   }, [rangeQuery, toast])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchApi<Product[]>('/products')
+      .then((response) => {
+        if (!cancelled) {
+          setLowProducts(response)
+          setLowError(false)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setLowError(true)
+          toast.error(error instanceof Error ? error.message : 'Failed to load products')
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [toast])
 
   useEffect(() => {
     let cancelled = false
@@ -299,6 +323,25 @@ export default function Dashboard() {
   }))
   const mixIsEmpty = mix.length === 0 || mixTotal === 0
   const mixFailed = mixError && mix.length === 0
+
+  // Point-in-time stock, independent of the selected range. Out-of-stock
+  // first, then lowest quantity, then name — status and tone derive once per
+  // product so rows, badges, and order can never disagree.
+  const lowStock = lowProducts
+    .map((product) => ({
+      product,
+      status: stockStatus(product.stock_quantity, product.reorder_level),
+      tone: stockTone(product.stock_quantity, product.reorder_level)
+    }))
+    .filter((entry) => entry.status !== 'healthy')
+    .sort((a, b) => {
+      if (a.status !== b.status) return a.status === 'out' ? -1 : 1
+      return (
+        a.product.stock_quantity - b.product.stock_quantity ||
+        a.product.name.localeCompare(b.product.name)
+      )
+    })
+  const lowFailed = lowError && lowProducts.length === 0
   const trendTotal = trend.reduce((sum, point) => sum + point.revenue, 0)
 
   return (
@@ -324,6 +367,47 @@ export default function Dashboard() {
           <StatCard key={tile.label} label={tile.label} value={tile.value} toneClass={tile.tone} />
         ))}
       </div>
+
+      {/* Low-stock callout — hidden entirely when nothing is low */}
+      {(lowStock.length > 0 || lowFailed) && (
+        <section aria-label="Low stock" className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <h2 className="text-lg font-semibold text-slate-800">
+              Low stock ({lowStock.length})
+            </h2>
+            <Link
+              to="/inventory?stock=low"
+              className="rounded-md text-sm text-brand hover:text-brand-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            >
+              View in Inventory
+            </Link>
+          </div>
+          {lowFailed ? (
+            <p className="text-sm text-danger">Failed to load low stock.</p>
+          ) : (
+            <ul className="divide-y divide-line">
+              {lowStock.map((entry) => (
+                <li
+                  key={entry.product.id}
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2"
+                >
+                  <span title={entry.product.name} className="min-w-0 flex-1 truncate text-sm text-slate-800">
+                    {entry.product.name}
+                  </span>
+                  <span className="flex shrink-0 items-center gap-3">
+                    <span className="text-sm tabular-nums text-slate-500">
+                      {entry.product.stock_quantity} left · Reorder at {entry.product.reorder_level}
+                    </span>
+                    <Badge tone={entry.tone}>
+                      {entry.status === 'out' ? 'Out of stock' : 'Low stock'}
+                    </Badge>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {/* Stats Cards */}
       <h2 className="text-lg font-semibold text-slate-800 mb-4">All time</h2>
