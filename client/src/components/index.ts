@@ -1,5 +1,5 @@
-export { default as Badge, stockTone } from './Badge';
-export type { Tone } from './Badge';
+export { default as Badge, stockStatus, stockTone } from './Badge';
+export type { StockStatus, Tone } from './Badge';
 export { default as Button } from './Button';
 export { default as CategoryChips } from './CategoryChips';
 export { default as EmptyState } from './EmptyState';
