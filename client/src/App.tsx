@@ -1,5 +1,7 @@
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
+import { Menu } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import Inventory from './pages/Inventory'
 import POS from './pages/POS'
@@ -7,7 +9,7 @@ import StockMovements from './pages/StockMovements'
 import Transactions from './pages/Transactions'
 import Receipt from './pages/Receipt'
 import Login from './pages/Login'
-import { LoadingSpinner } from './components'
+import { LoadingSpinner, NavDrawer } from './components'
 import { useAuth } from './contexts/AuthContext'
 import type { UserRole } from '../../shared/types'
 
@@ -73,6 +75,22 @@ function ProtectedRoute({ roles, children }: { roles: UserRole[]; children: Reac
 function App() {
   const location = useLocation()
   const { user, ready, logout } = useAuth()
+  const [navOpen, setNavOpen] = useState(false)
+
+  // The drawer is a mobile surface: navigating or crossing into desktop
+  // widths always leaves it closed.
+  useEffect(() => {
+    setNavOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    const query = window.matchMedia('(min-width: 768px)')
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setNavOpen(false)
+    }
+    query.addEventListener('change', handleChange)
+    return () => query.removeEventListener('change', handleChange)
+  }, [])
 
   if (!ready) {
     return (
@@ -97,17 +115,28 @@ function App() {
   return (
     <div className="min-h-screen bg-canvas">
       {/* Navigation */}
-      <nav className="bg-ink print:hidden">
+      <nav className="bg-ink">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setNavOpen(true)}
+                aria-label="Open navigation"
+                aria-expanded={navOpen}
+                aria-controls="mobile-nav"
+                className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+              >
+                <Menu size={24} aria-hidden="true" />
+              </button>
               <span className="text-xl font-bold text-accent">Cube Tech POS</span>
             </div>
-            <div className="flex items-center space-x-1 sm:space-x-4">
+            <div className="hidden md:flex items-center space-x-1 sm:space-x-4">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
+                  aria-current={location.pathname === item.path ? 'page' : undefined}
                   className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${
                     location.pathname === item.path
                       ? 'bg-brand text-white'
@@ -133,6 +162,41 @@ function App() {
           </div>
         </div>
       </nav>
+
+      <NavDrawer open={navOpen} onClose={() => setNavOpen(false)}>
+        <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setNavOpen(false)}
+              aria-current={location.pathname === item.path ? 'page' : undefined}
+              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink min-h-[44px] ${
+                location.pathname === item.path
+                  ? 'bg-brand text-white'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
+        <div className="mt-4 pt-4 border-t border-slate-700">
+          <p className="px-3 text-sm text-slate-300 mb-2">
+            {user.email} · {user.role}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setNavOpen(false)
+              logout()
+            }}
+            className="w-full text-left px-3 py-2 rounded-md text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink min-h-[44px]"
+          >
+            Sign out
+          </button>
+        </div>
+      </NavDrawer>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 px-4">

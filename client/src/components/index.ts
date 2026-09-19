@@ -12,6 +12,7 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as SearchInput } from './SearchInput';
 export { default as StatCard } from './StatCard';
 export { default as Modal } from './Modal';
+export { default as NavDrawer } from './NavDrawer';
 export { default as PaymentMethodControl } from './PaymentMethodControl';
 export { default as ReceiptView } from './ReceiptView';
 export { default as Table } from './Table';
