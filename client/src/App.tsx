@@ -118,7 +118,7 @@ function App() {
       <nav className="bg-ink">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between h-16">
-            <div className="flex items-center gap-1">
+            <div className="flex flex-1 items-center justify-between gap-1 lg:flex-none lg:justify-start">
               <button
                 type="button"
                 onClick={() => setNavOpen(true)}
