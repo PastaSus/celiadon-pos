@@ -40,7 +40,7 @@ development_status:
   4-1-recharts-revenue-trend: review
   4-2-top-products-payment-mix: review
   4-3-key-metrics-date-range: review
-  4-4-low-stock-callout: backlog
+  4-4-low-stock-callout: review
 
   # Epic 5: Works at the counter, on a phone or tablet
   epic-5: backlog
