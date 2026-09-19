@@ -1,3 +1,5 @@
+import FilterSelect from './FilterSelect';
+
 export type RangePreset = 'today' | '7' | '30' | '90' | 'custom';
 
 export interface DateRange {
@@ -48,6 +50,15 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
     onChange({ from: shiftISODate(today, -(days - 1)), to: today }, value);
   };
 
+  const handlePresetSelect = (value: string) => {
+    if (value === 'custom') {
+      onChange({ from, to }, 'custom');
+      return;
+    }
+    const option = PRESETS.find((entry) => entry.value === value);
+    if (option) applyPreset(option.days, option.value);
+  };
+
   const handleFromChange = (value: string) => {
     if (value === '') return;
     onChange({ from: value, to: value > to ? value : to }, 'custom');
@@ -65,7 +76,17 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
 
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-      <div className="flex flex-wrap gap-2 rounded-lg bg-brand-subtle p-2" role="group" aria-label="Date range presets">
+      <FilterSelect
+        label="Date range preset"
+        value={preset}
+        onChange={handlePresetSelect}
+        options={[
+          ...PRESETS.map((option) => ({ value: option.value, label: option.label })),
+          { value: 'custom', label: 'Custom' }
+        ]}
+        className="w-full md:hidden"
+      />
+      <div className="hidden md:flex flex-wrap gap-2 rounded-lg bg-brand-subtle p-2" role="group" aria-label="Date range presets">
         {PRESETS.map((option) => (
           <button
             key={option.value}

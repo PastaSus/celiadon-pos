@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { Box, X } from 'lucide-react';
 
 interface NavDrawerProps {
   open: boolean;
@@ -89,7 +89,8 @@ export default function NavDrawer({ open, onClose, children, id = 'mobile-nav' }
         className="absolute left-0 top-0 h-full w-72 max-w-[85vw] overflow-y-auto bg-ink p-4 focus:outline-none"
       >
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xl font-bold text-accent">Cube Tech POS</span>
+          <span className="sr-only">Cube Tech POS</span>
+          <Box size={28} aria-hidden="true" className="text-accent" />
           <button
             type="button"
             onClick={onClose}

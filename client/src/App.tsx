@@ -1,7 +1,7 @@
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
-import { Menu } from 'lucide-react'
+import { Box, Menu } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import Inventory from './pages/Inventory'
 import POS from './pages/POS'
@@ -84,7 +84,7 @@ function App() {
   }, [location.pathname])
 
   useEffect(() => {
-    const query = window.matchMedia('(min-width: 768px)')
+    const query = window.matchMedia('(min-width: 1024px)')
     const handleChange = (event: MediaQueryListEvent) => {
       if (event.matches) setNavOpen(false)
     }
@@ -118,20 +118,21 @@ function App() {
       <nav className="bg-ink">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-between h-16">
-            <div className="flex items-center gap-1">
+            <div className="flex flex-1 items-center justify-between gap-1 lg:flex-none lg:justify-start">
               <button
                 type="button"
                 onClick={() => setNavOpen(true)}
                 aria-label="Open navigation"
                 aria-expanded={navOpen}
                 aria-controls="mobile-nav"
-                className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
+                className="lg:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-md text-slate-300 hover:text-white hover:bg-white/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink"
               >
                 <Menu size={24} aria-hidden="true" />
               </button>
-              <span className="text-xl font-bold text-accent">Cube Tech POS</span>
+              <span className="sr-only">Cube Tech POS</span>
+              <Box size={28} aria-hidden="true" className="text-accent" />
             </div>
-            <div className="hidden md:flex items-center space-x-1 sm:space-x-4">
+            <div className="hidden lg:flex items-center space-x-1 sm:space-x-4">
               {navItems.map((item) => (
                 <Link
                   key={item.path}

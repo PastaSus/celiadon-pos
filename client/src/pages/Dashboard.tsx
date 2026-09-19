@@ -471,7 +471,7 @@ export default function Dashboard() {
                 tick={{ fontSize: 12, fill: '#64748B' }}
                 axisLine={{ stroke: '#E0E0E0' }}
                 tickLine={false}
-                width={90}
+                width={56}
               />
               <Tooltip
                 formatter={(value) => [formatCurrency(Number(value)), 'Revenue']}
