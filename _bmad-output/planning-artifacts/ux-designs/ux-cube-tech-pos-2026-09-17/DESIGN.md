@@ -5,24 +5,26 @@ status: final
 sources:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
   - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
-updated: 2026-09-17
+updated: 2026-09-22
 colors:
   # Cool azure/teal/cyan system on dark-navy chrome, inspired by Square, Toast, and Shopify POS. Accents stay in the cyan-to-azure band; neutrals are blue-gray. Ships via tailwind.config.js theme.extend as named colors (brand, accent, teal, ink) - see Colors section. Shipped bg-indigo-*/text-gray-* classes migrate to the new names.
-  primary: '#1690E8' # azure - brand, primary buttons, active nav
-  primary-hover: '#0E7BCB' # primary button hover
+  primary: '#0D75C4' # azure - brand, primary buttons, active nav; darkened from #1690E8 on 2026-09-22 for AA (white label 4.8:1)
+  primary-hover: '#0A6BB4' # primary button hover
   primary-strong: '#0B5EA6' # pressed state, link hover
   primary-surface: '#D8EEFD' # selected segments, active chip wash
   primary-subtle: '#EBF6FE' # receipt total block, info wash panels
   accent: '#02F0FD' # cyan - FLAT fill on dark navy chrome ONLY: logo mark, dark-surface focus ring, key numerals. No glow, no colored shadow. Never body text on white.
   accent-ink: '#07333D' # readable text on accent fills
   teal: '#3FE0D0' # secondary accent - chart series, progress fills
-  ring: '#1690E8' # focus ring on light surfaces (flat cyan ring on dark)
+  ring: '#0D75C4' # focus ring on light surfaces (tracks brand azure; flat cyan ring on dark)
   canvas: '#E8EDF3' # cool blue-gray page background
   surface: '#FFFFFF' # cards, tables, modals, nav sheets
   surface-muted: '#F5F8FB' # table head, modal detail blocks
   border: '#E0E0E0' # dividers, table rows
   border-strong: '#C2CFDB' # form inputs
   ink: '#0A1929' # dark navy - nav chrome, mobile cart bar, drawer footer
+  border-on-ink: '#334155' # slate-700 - dividers on navy chrome
+  text-on-ink: '#CBD5E1' # slate-300 - idle/meta text on navy chrome
   text: '#152A3F' # headings and values (maps to slate-800)
   text-strong: '#0A1929' # table cell emphasis (maps to slate-900)
   text-muted: '#5B6E82' # labels, meta, empty states (maps to slate-500)
@@ -37,7 +39,7 @@ colors:
   danger: '#DC2626' # red-600 - destructive actions, out of stock
   danger-surface: '#FEE2E2' # red-100 - badge fill
   danger-text: '#991B1B' # red-800 - badge text
-  chart-revenue: '#1690E8' # revenue series owns the brand azure
+  chart-revenue: '#0D75C4' # revenue series owns the brand azure
   chart-1: '#0B7E71' # deep teal
   chart-2: '#3FE0D0' # teal - bars and areas, never thin text
   chart-3: '#0A1929' # navy
@@ -100,7 +102,7 @@ Aesthetic keywords: **utilitarian, legible at arm's length, cool chrome, honest 
 
 The brand color is `{colors.primary}` (azure). It marks exactly three things: the Cube Tech POS logotype, the active nav item, and the primary action on a surface. On the POS screen the commit action is `{colors.success}` (deep teal) instead, following Toast: "Complete Sale" ends a transaction rather than navigating within one, so it owns its own color.
 
-Everything else is cool neutral. Cards are `{colors.surface}` on a `{colors.canvas}` page, the nav bar is `{colors.ink}` dark navy, and dividers are `{colors.border}`. Nothing is tinted for taste, and there are no gradients, no accent flourishes, and no celebratory motion. `{colors.accent}` cyan appears only as a flat fill on the dark chrome - the logo mark, the total numerals on the mobile bar - never as body text on white.
+Everything else is cool neutral. Cards are `{colors.surface}` on a `{colors.canvas}` page, the nav bar is `{colors.ink}` dark navy, and dividers are `{colors.border}`. Nothing is tinted for taste, and there are no gradients, no accent flourishes, and no decorative or celebratory motion - motion exists only as functional feedback, specified in Motion. `{colors.accent}` cyan appears only as a flat fill on the dark chrome - the logo mark, the total numerals on the mobile bar - never as body text on white.
 
 **Nothing glows.** No neon, no bloom, no outer light, no colored shadow, no blurred halo behind a number. Emphasis on the navy chrome comes from flat cyan plus size and weight, not from emitted light. This is a retail tool, not a gaming rig: a shadow in this product is a neutral, short, subtle gray shadow that separates a card from the page, and nothing else.
 
@@ -108,7 +110,7 @@ This product inherits its interaction patterns wholesale from the shipped librar
 
 ## Colors
 
-Two color systems operate in this product, and they must not be confused with each other. The palette is cyan `{colors.accent}`, teal `{colors.teal}`, neutral light gray `{colors.border}`, and azure `{colors.primary}` - completed with a dark navy `{colors.ink}` for chrome, a cool blue-gray page `{colors.canvas}`, a slate text ramp, and amber/red reserved for stock truth. Cyan-on-white fails below large-headline sizes, so `{colors.accent}` never carries body text; it sits flat on the navy chrome instead, and it is never glowing.
+Two color systems operate in this product, and they must not be confused with each other. The palette is cyan `{colors.accent}`, teal `{colors.teal}`, neutral light gray `{colors.border}`, and azure `{colors.primary}` - completed with a dark navy `{colors.ink}` for chrome, a cool blue-gray page `{colors.canvas}`, a slate text ramp, and amber/red reserved for stock truth. Cyan-on-white fails at any size on white (1.41:1), so `{colors.accent}` never carries body text; it sits flat on the navy chrome instead, and it is never glowing.
 
 **Brand azure is chrome and intent.** `{colors.primary}` fills primary buttons and the active nav pill (on navy chrome the active item is a filled azure pill with white text, which is also how Square's register marks the live tab). `{colors.primary-surface}` is the wash for selected segments and the active POS category chip. `{colors.ring}` draws the focus ring on light surfaces; on the navy chrome the focus ring is `{colors.accent}` cyan so it survives the dark background. Azure never means "good" or "bad" - it means "this is interactive" or "this is the one we are pointing at." A surface that uses azure for a status has made a mistake; that is what `Badge` tones are for.
 
@@ -155,7 +157,7 @@ Two special cases:
 
 ## Layout & Spacing
 
-The Tailwind 4-based scale is inherited with no custom spacing tokens. The page shell is fixed: content lives in `max-w-7xl` (`{spacing.page-max}`) centered, with `{spacing.gutter}` horizontal padding and `{spacing.section}` vertical padding, under a nav of fixed height. Every existing surface already follows this, and every new surface joins it rather than introducing its own width.
+The Tailwind 3.4 scale is inherited with no custom spacing tokens. The page shell is fixed: content lives in `max-w-7xl` (`{spacing.page-max}`) centered, with `{spacing.gutter}` horizontal padding and `{spacing.section}` vertical padding, under a nav of fixed height. Every existing surface already follows this, and every new surface joins it rather than introducing its own width.
 
 Grid behavior, by surface:
 
@@ -166,7 +168,7 @@ Grid behavior, by surface:
 | Reports | Charts 2 per row, table full width | Everything stacks |
 | Inventory / Transactions / Stock Movements | Full-width table | Full-width table that scrolls horizontally |
 
-Card padding is `{spacing.card}` for a standalone card and `{spacing.gutter}` for a dense nested block (the detail panels inside a Modal). On wide screens a key number - the POS cart total, a Dashboard stat value, the mobile cart-bar total - sits on `{colors.ink}` navy rather than white, with the value in flat `{colors.accent}` cyan at `{typography.numeric-lg}` or larger, so the money reads first through size, weight, and color alone. No glow props it up. Form fields stack vertically with `{spacing.gutter}` between fields and `{spacing.section}` before the action row, which is always right-aligned with the primary action rightmost. That is the existing Inventory and Transactions behavior, ratified.
+Card padding is `{spacing.card}` for a standalone card and `{spacing.gutter}` for a dense nested block (the detail panels inside a Modal). On wide screens a key number - the POS cart total or a Dashboard stat value - sits on `{colors.ink}` navy rather than white; below `lg` the cart summary bar total carries the same navy + flat `{colors.accent}` cyan treatment at `{typography.numeric-lg}` or larger, so the money reads first through size, weight, and color alone. No glow props it up. Form fields stack vertically with `{spacing.gutter}` between fields and `{spacing.section}` before the action row, which is always right-aligned with the primary action rightmost. That is the existing Inventory and Transactions behavior, ratified.
 
 Controls inside a row sit `{spacing.tight}` apart when they belong to one action (quantity stepper, cart line controls) and `{spacing.control}` apart when they are distinct actions (Cancel / Save).
 
@@ -206,6 +208,26 @@ Corners are consistent and slightly soft - the shape language of a tool, not a c
 
 Borders are 1px `{colors.border}` for dividers and table rows, and `{colors.border-strong}` for form inputs, so an input is discoverable before it is focused. No surface uses a 2px border, and no surface uses a border *and* a shadow to mean the same thing - a card is defined by its shadow, a table row by its divider.
 
+## Motion
+
+Motion in this product is functional only, and it answers exactly one of three questions: *where did that panel come from* (spatial continuity), *did my press register* (affordance feedback), or *is the system working* (loading honesty). It never decorates, never celebrates, and never competes with a price or a quantity. A cashier mid-transaction gets feedback, not choreography.
+
+Technique is CSS transitions and at most a few keyframes in `index.css` - no animation library, because the dependency decision for this run is CSS/Tailwind only. Everything below is a hard rule, not a preference:
+
+| Token | Value | Use |
+|---|---|---|
+| fast | 120ms | hover, press, color state changes |
+| base | 200ms | overlay panel enter/exit, loading pulse |
+| max | 250ms | nothing in the product moves slower than this |
+
+- **Easing:** enter decelerates (`ease-out`), exit accelerates slightly (`ease-in`). No springs, no overshoot, no bounce - a register drawer that overshoots reads as a toy.
+- **Properties:** `transform` and `opacity` for anything that moves; `color` / `background-color` for state changes (the existing `transition-colors` pattern). Never animate layout properties (`width`, `height`, `top`, `left`), `box-shadow`, or `filter` - all of them paint, and a store tablet should not drop frames for a drawer.
+- **Overlays:** the `Modal`, `NavDrawer`, and `CartDrawer` scrim fades at base; the panel translates in from its edge (left for NavDrawer, bottom for CartDrawer, none for Modal - it just fades with the scrim) and exits faster than it enters. Enter/exit choreography is owned by one shared dialog hook, not per-component CSS, so the three dialogs cannot drift.
+- **Press feedback:** interactive controls may use `active:scale-[0.98]` over fast - `Button`, POS product tiles, category chips, nav pills. Transform only; the element's hit box does not move.
+- **Loading honesty:** `StatCard` and `ChartPanel` frames show an opacity pulse (Tailwind's `animate-pulse`) on their placeholder blocks while loading, so the frame reads as alive without a spinner takeover.
+- **Banned:** page/route transitions, animating list or table rows on filter change, sale-complete celebration beats, parallax, scroll-jacking, skeleton gradient shimmer, and any motion whose only job is to look nice.
+- **Reduced motion:** one global `prefers-reduced-motion: reduce` rule in `index.css` kills all animation and transition duration outright (full stop, not shortened). No component opts out of this rule.
+
 ## Components
 
 **Inherited - same props and behaviors, new colors.** `Button` (primary / secondary / danger / dangerGhost / success / ghost, sm / md / lg), `Badge` (green / yellow / red / indigo / gray variant names kept; fills re-mapped to teal / amber / red / azure-wash / slate), `Table` (typed `Column<T>`, `dense` for modal nesting), `Modal`, `Toast`, `LoadingSpinner`. The library migrates to the named palette (`brand` azure, `teal` commit, slate text) in `tailwind.config.js`; their in-code variants and tones are the structural contract, and the new surfaces compose them.
@@ -215,7 +237,10 @@ Borders are 1px `{colors.border}` for dividers and table rows, and `{colors.bord
 - **SearchInput** - `{components.input}` with a leading lucide `Search` icon at `{colors.text-muted}` inside the field, and a lucide `X` clear button at `{colors.text-muted}` that appears only when the field is non-empty. Same height and radius as the form inputs it sits beside, so a filter row reads as one line of controls. Focus uses `{colors.ring}`.
 - **FilterSelect** - a native `select` wearing `{components.input}`, with the same height as `SearchInput`. Never a custom dropdown: the native control is faster on a tablet and needs no keyboard work.
 - **Category chips (POS)** - `{rounded.full}` pills at `{typography.caption}` scale. Inactive: `{colors.surface}` fill with `{colors.primary-strong}` text on a `{colors.primary-subtle}` wash row. Active: `{colors.primary}` fill with `{colors.surface}` text. Exactly one is active at a time, and the active chip is the only azure element in the grid's header area.
-- **CartDrawer** - `{components.cart-drawer}` panel rising from the bottom edge, full width on a phone, capped at a comfortable reading width on a large phone in landscape. Same scrim as `Modal`. A drag/close affordance at the top edge, cart contents as in the desktop cart, and a pinned footer on `{colors.ink}` navy holding the total in flat `{colors.accent}` cyan numerals with Complete Sale beside it, so the commit action never scrolls out of reach and the total is the largest, heaviest number on the panel.
+- **CartDrawer** - `{components.cart-drawer}` panel rising from the bottom edge, full width on a phone, capped at a comfortable reading width on a large phone in landscape. Same scrim as `Modal`. A drag/close affordance at the top edge, cart contents as in the desktop cart, and a pinned footer on `{colors.ink}` navy holding the total in flat `{colors.accent}` cyan numerals with Complete Sale beside it, so the commit action never scrolls out of reach and the total is the largest, heaviest number on the panel. Enters and exits per Motion (base in, faster out, shared dialog hook).
+- **Header (app shell, updated)** - the `{components.nav-chrome}` bar at every width: hamburger trigger below `lg`, the `{colors.accent}` logo mark with the **visible** `Cube Tech POS` logotype beside it (no longer `sr-only` - a sighted user on a phone should see the product name), and a compact user chip right-aligned showing the signed-in user's role with their email where space allows (`sm` and up show the email; below `sm` the role alone). The chip sits behind a 1px `{colors.border-on-ink}` divider, text at `{typography.caption}` in `{colors.text-on-ink}`, matching the desktop meta treatment. This deliberately reverses the old hide-below-`md` rule: staff share one till, and who is signed in must be glanceable without opening the drawer. The hamburger drawer keeps the full `email · role` meta and Sign out unchanged.
+- **NavDrawer** - inherited visuals, unchanged from Story 5.1: `{components.nav-chrome}` navy panel sliding from the left edge, `w-72` capped at `85vw`, same 50 percent scrim as `Modal`, `{rounded.lg}`-free hard edge (it is chrome, not a card). Behavioral spec and Motion duties live in EXPERIENCE.md.Component Patterns and DESIGN.md Motion; this bullet exists so the pair extracts complete.
+- **Cart summary bar** - `{components.bottombar}` fixed bar below `lg` on POS: `{colors.ink}` navy, item count in `{colors.text-on-ink}`, total in flat `{colors.accent}` cyan at `{typography.numeric-lg}`, whole bar is the tap target that opens CartDrawer. Minimum 44px tall. Resets to zero after a completed sale.
 - **PaymentMethodControl** - a three-segment control in a `{colors.primary-subtle}` wash with a `{rounded.lg}` container. The selected segment is a filled `{colors.primary}` azure pill with white text; unselected segments are `{colors.primary-strong}` text only. It sits directly above Complete Sale, so the choice reads as part of the commit rather than a separate step.
 - **StatCard** - `{components.stat-card}`, label at `{typography.caption}` in `{colors.text-muted}` with the tone dot at `{rounded.full}` to its left, value at `{typography.numeric-lg}` in `{colors.text}` with tabular figures. The revenue card carries a `{colors.ink}` navy value band so the day's money reads first on the Dashboard; the low-stock card's value stays in `{colors.warning-text}` amber so it never borrows the commit color. The dot colors come from `{colors.chart-1}` through `{colors.chart-5}` for consistency with the charts below.
 - **ChartPanel** - `{components.chart-panel}` holding a title at `{typography.section}` and the chart beneath it. Grid lines in `{colors.border}`, axis labels at `{typography.caption}` in `{colors.text-muted}`, no vertical grid lines, and no chart junk (no 3D, no gradients, no drop shadows on series). Tooltips format money through `formatCurrency()`. Teal `{colors.teal}` is the bar-and-area color; thin lines and small text never use it.
@@ -261,3 +286,6 @@ Emoji are banned in text as well, not just in icons - the voice rules in `EXPERI
 | Use flat cyan on navy chrome only (logo mark, key numerals, dark focus ring) | Set body text, labels, or thin lines in cyan on white |
 | Let size, weight, and color carry emphasis on navy | Add glow, neon, bloom, or any colored shadow to make a number pop |
 | Let the empty state say what is true | Add a create action to a filtered-to-nothing state |
+| Animate transform/opacity/color only, within 250ms, via the shared dialog hook for overlays | Animate layout properties, shadows, or filters; add route or list-reflow transitions; ship a fourth dialog focus-trap copy |
+| Honor the global `prefers-reduced-motion` kill rule untouched | Let a component override or soften reduced-motion, or gate motion behind a JS media-query check per surface |
+| Keep the logotype and user chip visible in the header at every width | Hide identity chrome below `md` again, or add a bottom tab bar that collides with the POS cart bar |
