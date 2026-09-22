@@ -4,7 +4,7 @@ status: final
 sources:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
   - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
-updated: 2026-09-17
+updated: 2026-09-22
 ---
 
 # Cube Tech POS - Experience Spine
@@ -40,7 +40,7 @@ Landing surfaces differ by role: a cashier lands on Point of Sale, everyone else
 
 Modal stacking is one level deep. Category management, product add/edit, product delete confirmation, and transaction detail are all Modals, and no Modal opens another Modal. The receipt is a surface, not a Modal - it needs the print dialog and a full page.
 
-→ No mocks in this run; every surface above is build-ready from the spine tables. Spine wins on conflict.
+→ One color/POS reference mockup exists (`mockups/pos-key-screen.html`, linked from DESIGN.md Colors); no composition mocks this run. Every surface above is build-ready from the spine tables. Spine wins on conflict.
 
 ## Voice and Tone
 
@@ -74,7 +74,10 @@ Behavioral specs. Visual specs live in `DESIGN.md.Components` or in the existing
 | SearchInput (new) | Inventory, Stock Movements | Debounced 200ms on the product name; case-insensitive; clear button appears once the field is non-empty; Escape clears it. Result count updates in place; no submit button. |
 | FilterSelect (new) | Inventory, Stock Movements | Native select styled to match inputs. First option is always "All categories" (or "All types"), which is the default. Combines with search as AND, never as OR. |
 | Category chips (new, POS only) | Point of Sale | Client-side filter over the loaded product list - no request. "All" chip is selected by default; exactly one chip is active at a time. |
-| CartDrawer (new) | POS below `lg` | Opens from a fixed bottom bar showing item count and total. Overlay scrim from `Modal`'s language. Closes on Escape, on scrim click, and after a completed sale. Cart contents and controls behave exactly as the desktop cart does. |
+| CartDrawer (new) | POS below `lg` | Opens from the cart summary bar showing item count and total. Overlay scrim from `Modal`'s language. Closes on Escape, on scrim click, and after a completed sale. Cart contents and controls behave exactly as the desktop cart does. Enters/exits per DESIGN.md Motion via the shared dialog hook. |
+| NavDrawer (existing, Story 5.1) | Header hamburger below `lg` | Left slide-in drawer with role-permitted links, full `email · role` meta, Sign out. Dialog behavior (scrim, Escape, focus trap, return) comes from the shared dialog hook; enter/exit per DESIGN.md Motion. Structure otherwise unchanged - no new icons or section labels. |
+| Header (app shell, updated) | All surfaces, every width | Hamburger below `lg` opens NavDrawer; logotype visible at all widths; compact user chip (role always, email at `sm`+) right-aligned so shared-till identity is glanceable. Chip never replaces the drawer's full meta + Sign out. No page title in the bar - the page's own display title sits first in content. |
+| Cart summary bar (token `bottombar`) | POS below `lg` | Fixed bar showing item count and total; taps open CartDrawer. Always visible so the cart is never unreachable; navy chrome with cyan total per DESIGN.md. Resets to "0 items" after a completed sale. |
 | PaymentMethodControl (new) | POS checkout block | Three options - Cash, Card, E-wallet - presented as a segmented control. Cash is preselected. Always visible; never hidden behind the Complete Sale button. Changing it after a failed sale preserves the cart and the selection. |
 | StatCard (new) | Dashboard, Reports | Label above value, tone dot left of the label, value at `{typography.numeric-lg}`. Optional delta line beneath (Reports only). No interaction - a stat card is not a button. |
 | DateRangeBar (new) | Reports | Two native date inputs plus presets: Today, 7 days, 30 days, 90 days. A preset writes both inputs. Changing either input switches the active preset to "Custom". Ranges are inclusive of both endpoints. Invalid range (start after end) is corrected by moving the other endpoint, never by erroring. |
@@ -82,7 +85,11 @@ Behavioral specs. Visual specs live in `DESIGN.md.Components` or in the existing
 | ReceiptView (new) | Receipt print surface | Renders store name, receipt number, timestamp, line items (name, qty, unit price, subtotal), total, payment method, and cashier email. Read-only. One primary action: Print. |
 | EmptyState (new) | All tables and lists | Existing `Table` `emptyMessage` covers tables; `EmptyState` covers grids and panels. One sentence naming the state, and an action only when the user can act (e.g. "Add Product"). |
 | Table (existing) | All lists | Unchanged. Typed `Column<T>`, `dense` for nested use inside a Modal, `emptyMessage` for the empty case, horizontal scroll on narrow viewports. New tables configure columns; they do not reimplement layout. |
-| Modal (existing) | Inventory, Transactions | Unchanged behavior. Gains Escape-to-close and a focus trap (see Accessibility Floor). One level deep. |
+| Modal (existing) | Inventory, Transactions | Unchanged behavior. Gains Escape-to-close and a focus trap (see Accessibility Floor). One level deep. Enter/exit and dialog behavior consolidated onto the shared hook per DESIGN.md Motion. |
+| Button (existing) | All surfaces | Unchanged - variant/size props are the contract. Behavioral rules (one primary per surface, press feedback per DESIGN.md Motion) live in Interaction Primitives and Motion, not here. |
+| Badge (existing) | Inventory, POS, Dashboard, Stock Movements | Unchanged. Tones map to the palette per DESIGN.md; `stockTone()` remains the only rule that picks a stock tone. |
+| Toast (existing) | All mutations | Unchanged - success/error/info, 4s auto-dismiss, `role="status"` announcements. Never used for filter or navigation events. |
+| LoadingSpinner (existing) | All loading states | Unchanged - centered in the surface's own area per State Patterns; never a full-page takeover on filter change. |
 
 Low stock is not a component - it is the `stockTone()` rule applied through `Badge`, and it must read identically on Inventory, POS, and the Dashboard callout.
 
@@ -97,6 +104,7 @@ Every surface has the same five states, and a surface is not done until all five
 | Empty (filtered to nothing) | Distinct from the above and never shows a create action: "No products match this filter" with a Clear filters affordance. This distinction matters - offering "Add Product" to someone whose filter missed is wrong. |
 | Error | `Toast` with the server's message, inline in the surface where the failure was local (e.g. the range did not load), and the previous good data stays on screen rather than blanking out. |
 | Partial / stale | When a sale completes, stock changes; the POS grid reloads and shows the change without a full re-mount. A stale number is worse than a spinner, so a mutation always refreshes what it invalidated. |
+| Permission-denied (direct URL, off-role) | An explicit refusal in the main content area - "Access denied. Your role ({role}) does not have permission to view this page." - plus a link to the role's landing surface. No silent redirect, no partial page, and never a redirect loop on a mistyped URL. Matches the shipped `ProtectedRoute` behavior. |
 
 Surface-specific states worth naming:
 
@@ -116,6 +124,7 @@ Surface-specific states worth naming:
 - **Keyboard path through checkout.** Tab reaches product tiles, quantity steppers, the payment control, and Complete Sale in that order. Enter on a focused tile adds it to the cart. The receipt is reachable and printable without a mouse.
 - **No optimistic mutations on money.** Cart quantities are local and feel instant; a completed sale is real only after the server responds. A sale that fails leaves the cart exactly as it was.
 - **The cart survives navigation within POS.** Switching category filters or reopening the drawer never drops cart contents. Only a completed sale or an explicit removal empties it.
+- **Motion is feedback, not spectacle.** Overlay enter/exit, press acknowledgement, and loading pulse are the only motion the product performs (DESIGN.md Motion owns durations and technique). Nothing waits on an animation to become interactive - panels take input on the first frame, and a fast click-through never queues behind a transition. Route changes, filter reflows, and sale celebrations stay instant and silent beyond the toast the mutation already earns.
 
 ## Accessibility Floor
 
@@ -128,8 +137,10 @@ The floor is what makes the product usable at a counter with a queue - not a com
 - **Status changes are announced.** The `Toast` container already exposes `role="status"`; error toasts are the case that matters most, because a failed sale must not be silent for a screen-reader user.
 - **The receipt prints legibly.** Print output is high contrast, does not depend on color to convey anything (the payment method is text, not a colored chip), and fits 80mm without horizontal clipping.
 - **Color is never the only signal.** Stock state always shows the number alongside the badge; the active nav item carries a surface fill as well as color; chart series carry a legend or label. A user who cannot distinguish yellow from red still gets the count.
+- **Text meets WCAG AA contrast (4.5:1 for body and control labels, 3:1 for large text and non-text indicators).** This floor binds every load-bearing foreground/background pair the spines commit - button labels, nav labels, badge text, muted meta on canvas - and any pair that fails is a token defect to fix once in the palette, not per component. Resolved 2026-09-22: `{colors.primary}` darkened to #0D75C4 so white button/nav labels clear 4.5:1 (previously #1690E8 at 3.39:1).
 - **Tap targets are at least 44px on the touch surfaces** (POS tiles, steppers, drawer controls, payment segments). This is the one place where a counter device, not a desktop mouse, sets the floor.
 - **Icon-only controls are labeled.** Every icon-only button - cart drawer trigger, Modal and CartDrawer close, quantity steppers, Print - carries an `aria-label`, and icons that merely decorate a button's own text are `aria-hidden="true"`. The existing `✕` glyph in `Modal.tsx` has an `aria-label` already, which is the right instinct; the glyph itself is the problem, not the label, because a screen reader may announce it as "multiplication sign."
+- **Motion yields completely under `prefers-reduced-motion: reduce`.** One global CSS rule kills all animation and transition durations; no component softens, shortens, or bypasses it. Motion never carries information that is not also present as text or state - a user who removes motion loses nothing but the transition itself. Overlay dialogs under reduced motion appear and disappear instantly while keeping every dialog behavior (Escape, trap, focus return) intact.
 
 ## Responsive & Platform
 
@@ -139,12 +150,12 @@ Responsive is an app-wide rule set, not a per-feature detail. `md` is 768px and 
 |---|---|
 | `≥ lg` (1024px+) | Full nav with all role-permitted items. POS is a 3-column layout with a sticky cart. Dashboard stat cards 4 across, charts 2 per row. Reports charts 2 per row. |
 | `md`–`lg` (768–1023px) | Nav stays horizontal. POS drops to 2 columns, so the cart becomes the `CartDrawer` with the fixed bottom summary bar. Dashboard stat cards 2 across, charts stack. Tables scroll horizontally. |
-| `< md` (under 768px) | Nav collapses to a hamburger that opens a drawer containing the role-permitted items, the user email/role meta, and Sign out. The POS product grid is 2 across and the cart is exclusively the drawer. Dashboard and Reports stack everything to one column. Tables scroll horizontally. Forms and modals go full width minus page padding. |
+| `< md` (under 768px) | Nav collapses to a hamburger that opens a drawer containing the role-permitted items, the full user email/role meta, and Sign out. The header itself keeps the visible logotype and a compact user chip (role always; email at `sm`+). The POS product grid is 2 across and the cart is exclusively the drawer. Dashboard and Reports stack everything to one column. Tables scroll horizontally. Forms and modals go full width minus page padding. |
 
 Rules that hold at every width:
 
-- The nav's user meta (`email · role`) hides below `md`; it reappears inside the hamburger drawer rather than being dropped, so a cashier can always confirm who they are signed in as.
-- The cart is never unreachable: above `lg` it is a column, below `lg` it is the drawer triggered from a bottom bar that always shows item count and total.
+- The nav's user meta shows in two tiers, both always reachable: a compact chip in the header at every width (role alone on the narrowest phones, `email · role` from `sm` up) so shared-till identity is glanceable, and the full `email · role` plus Sign out inside the hamburger drawer. Identity is never fully hidden behind the menu again - that was the shipped rule and it made the mobile header read as empty and anonymous.
+- The cart is never unreachable: above `lg` it is a column, below `lg` it is the drawer triggered from the cart summary bar that always shows item count and total.
 - Tables never drop columns to fit. They scroll horizontally, which the `Table` component already supports, and identifiers stay in the first column so the user keeps their place while scrolling.
 - Chart panels keep a stable height across breakpoints so filter changes do not make the page jump.
 - The POS is the priority surface on touch: it is the only surface where a phone or tablet is a first-class device rather than a fallback, and it is the surface a cashier holds while serving a customer.
@@ -153,13 +164,15 @@ This is responsive web, not a native app, and offline mode is out of scope - a s
 
 ## Key Flows
 
+Named-protagonist journeys. Capability binding: Flow 1 carries CAP-3, CAP-6, CAP-9; Flow 2 carries CAP-2 (search/filter half), CAP-4, CAP-5; Flow 3 carries CAP-2 (reorder/category half) and CAP-5. CAP-2's category CRUD modal is specified by Component Patterns and State/Interaction rules rather than a dedicated flow walk.
+
 ### Flow 1 - A cash sale on a phone (Rosa, cashier, Saturday 11:40am, queue of four)
 
 1. Rosa opens the site on her phone. The session is alive, so she lands directly on Point of Sale - not the Dashboard - because her role's landing surface is POS.
-2. The nav is a hamburger; she ignores it. The product grid is two across. She taps two items: a USB-C cable and a phone case. The fixed bottom bar updates to "2 items · $34.98."
-3. The customer pays cash. Rosa taps the bottom bar; the `CartDrawer` rises with both lines, their quantity steppers, and the total. The payment control already reads **Cash** - she does not have to touch it.
+2. The nav is a hamburger; she ignores it. The product grid is two across. She taps two items: a USB-C cable and a phone case. The cart summary bar updates to "2 items · $34.98."
+3. The customer pays cash. Rosa taps the cart summary bar; the `CartDrawer` rises with both lines, their quantity steppers, and the total. The payment control already reads **Cash** - she does not have to touch it.
 4. She taps **Complete Sale**.
-5. **Climax:** The drawer closes, a toast says "Sale completed," the bottom bar resets to "0 items," and the grid behind her has already refreshed - the cable now reads 11 in stock instead of 12. Rosa opens the new transaction from the toast's wake, hits **Print**, and the print dialog opens on a receipt that fits the store's 80mm roll. She is on the next customer before the receipt finishes printing.
+5. **Climax:** The drawer closes, a toast says "Sale completed," the cart summary bar resets to "0 items," and the grid behind her has already refreshed - the cable now reads 11 in stock instead of 12. Rosa opens the new transaction from the toast's wake, hits **Print**, and the print dialog opens on a receipt that fits the store's 80mm roll. She is on the next customer before the receipt finishes printing.
 
 Failure: the cable sold on another till a second earlier, so the server rejects the sale with "Not enough stock." The drawer stays open with both lines intact, an error toast names the problem, and Rosa lowers the cable's quantity to 1 and completes. Nothing is retyped.
 
@@ -173,7 +186,7 @@ Failure: the cable sold on another till a second earlier, so the server rejects 
 
 Failure: the range returns nothing because he set the start date after the end date. The control corrects the range by moving the end date rather than raising an error, and the charts render the corrected range instead of an empty axes box.
 
-### Flow 3 - The reorder walk (Priya, owner, Thursday 4:30pm, mid-shift)
+### Flow 3 - The reorder walk (Priya, admin / owner-operator, Thursday 4:30pm, mid-shift)
 
 1. Priya is on the sales floor with a tablet. The Dashboard's low-stock callout names 3 products at or below reorder level.
 2. She opens Stock Movements to see *why* they are low before she reorders - she wants to know whether these sold through or were adjusted.
@@ -185,7 +198,7 @@ Failure: the movements list is long and she cannot tell the products apart in on
 
 ## Inspiration & Anti-patterns
 
-**Lifted from the existing app, deliberately.** The stat-card row, the `Table` column model, the modal detail pattern from Transactions, and the `stockTone` badge rule are already this product's vocabulary. New surfaces extend them rather than introducing a second way to show a number, a list, or a status.
+**Lifted from the existing app, deliberately.** The stat-card row, the `Table` column model, the modal detail pattern from Transactions, and the `stockTone()` badge rule are already this product's vocabulary. New surfaces extend them rather than introducing a second way to show a number, a list, or a status.
 
 **Lifted from counter hardware.** The 80mm receipt width, monospace totals, and tabular figures come from physical receipt printers, not from web dashboards.
 
@@ -199,6 +212,10 @@ Failure: the movements list is long and she cannot tell the products apart in on
 
 **Rejected - a global low-stock destination in the nav.** Low stock is a state of a product, surfaced where products are shown, plus one Dashboard callout. It is not a page.
 
+**Rejected - page transitions, list reflow, and sale celebrations.** Route and row animation delays content a standing cashier is waiting on; a celebration beat contradicts the counter voice (the toast already says "Sale completed") and the no-celebratory-motion rule. Motion stays at overlay, press, and loading pulse only.
+
+**Rejected - a bottom tab bar.** On the POS - the priority touch surface - a fixed bottom nav would fight the cart summary bar for the same strip of screen. The hamburger drawer ships and works; the header gains identity chrome instead.
+
 ## Open Items
 
 All three non-blocking items were resolved by accepting the documented default. The palette itself is provisional in one sense only: it is reviewed again against the first built screen, and a change is a `tailwind.config.js` edit rather than a redesign.
@@ -208,5 +225,5 @@ All three non-blocking items were resolved by accepting the documented default. 
 - **Chart default range - default 30 days, no persistence.** The Dashboard opens on the last 30 days every time. Role-based defaults and remembering the last picked range are both rejected for now: the SPEC does not ask for them, and a store manager comparing month over month changes the range once per visit. If it proves annoying in use, persistence is a `localStorage` addition in the Reports surface alone.
 - **Receipt reprint logging - raised as a SPEC gap, not a UX decision.** Anyone who can see Transactions can print, with no audit trail. Logging reprints as stock movements would be wrong (nothing moves), and inventing a `receipt_prints` table is schema work the SPEC does not authorize. Recorded here so CE can decide whether it becomes a story or stays out of scope.
 
-→ Next: `bmad-create-epics-and-stories`, which reads this folder as the UX contract alongside `SPEC.md` and `ARCHITECTURE-SPINE.md`. Spine wins on conflict.
+→ Next: implementation continues under `bmad-build` against this folder as the UX contract alongside `SPEC.md` and `ARCHITECTURE-SPINE.md` (epics and sprint status already exist). Spine wins on conflict.
 

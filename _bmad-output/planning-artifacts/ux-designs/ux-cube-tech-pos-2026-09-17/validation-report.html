@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UX Design Validation: Cube Tech POS</title>
+<style>
+  :root {
+    --bg: #fafaf9;
+    --surface: #ffffff;
+    --border: #e7e5e4;
+    --text: #1c1917;
+    --muted: #78716c;
+    --verdict-strong: #16a34a;
+    --verdict-adequate: #65a30d;
+    --verdict-thin: #d97706;
+    --verdict-broken: #dc2626;
+    --sev-low: #64748b;
+    --sev-medium: #ca8a04;
+    --sev-high: #ea580c;
+    --sev-critical: #dc2626;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    font-size: 15px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px 64px; }
+  header.report-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 24px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 24px;
+  }
+  .title h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+  .title .subtitle { color: var(--muted); font-size: 13px; margin-top: 4px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .synthesis {
+    background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--muted);
+    border-radius: 8px; padding: 18px 22px; margin-bottom: 24px; font-size: 15.5px;
+  }
+  .synthesis p { margin: 0 0 10px; }
+  .synthesis p:last-child { margin-bottom: 0; }
+  .dimension-summary {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 24px;
+  }
+  .dim-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+  .dim-card .dim-name { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+  .dim-card .dim-verdict { font-size: 14px; font-weight: 600; }
+  section.dimension, section.reviewer-section { margin-bottom: 14px; }
+  section.dimension details, section.reviewer-section details {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  }
+  section summary {
+    padding: 14px 20px; cursor: pointer; user-select: none; list-style: none;
+    display: flex; align-items: center; gap: 12px;
+  }
+  section summary::-webkit-details-marker { display: none; }
+  section summary::before {
+    content: "▸"; display: inline-block; color: var(--muted); transition: transform 0.15s ease;
+  }
+  section details[open] summary::before { transform: rotate(90deg); }
+  section summary h2 { display: inline; margin: 0; font-size: 16px; font-weight: 600; letter-spacing: -0.005em; flex: 1; }
+  .verdict-pill {
+    font-size: 11px; padding: 3px 10px; border-radius: 999px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em; color: white;
+  }
+  .verdict-strong { background: var(--verdict-strong); }
+  .verdict-adequate { background: var(--verdict-adequate); }
+  .verdict-thin { background: var(--verdict-thin); }
+  .verdict-broken { background: var(--verdict-broken); }
+  .dim-body { padding: 4px 20px 18px; }
+  .dim-judgment { color: var(--text); font-size: 14.5px; }
+  .dim-judgment p { margin: 0 0 10px; }
+  .findings-list { padding: 0 20px 4px; }
+  article.finding { padding: 14px 0; border-top: 1px solid var(--border); }
+  article.finding:first-child { border-top: none; }
+  article.finding header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .badge {
+    font-size: 10.5px; padding: 3px 8px; border-radius: 4px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em; line-height: 1.4;
+  }
+  .badge-sev-low { background: rgba(100, 116, 139, 0.12); color: var(--sev-low); }
+  .badge-sev-medium { background: rgba(202, 138, 4, 0.14); color: var(--sev-medium); }
+  .badge-sev-high { background: rgba(234, 88, 12, 0.14); color: var(--sev-high); }
+  .badge-sev-critical { background: rgba(220, 38, 38, 0.14); color: var(--sev-critical); }
+  .finding-title { margin: 0; font-size: 15px; font-weight: 500; flex: 1; min-width: 200px; }
+  .finding-location { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12.5px; color: var(--muted); }
+  .finding-note, .finding-fix { margin-top: 6px; font-size: 14px; }
+  .finding-fix strong { color: var(--muted); font-weight: 500; }
+  .resolved { color: var(--verdict-strong); font-weight: 600; }
+  .mechanical {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 20px; margin-top: 24px; font-size: 14px;
+  }
+  .mechanical h3 { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .mechanical ul { margin: 0; padding-left: 20px; }
+  .mechanical li { margin-bottom: 4px; color: var(--text); }
+  footer.report-footer {
+    margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--muted); font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  footer .meta { display: flex; gap: 24px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+  <div class="container">
+
+    <header class="report-header">
+      <div class="title">
+        <h1>Cube Tech POS — UX Design Validation Report</h1>
+        <div class="subtitle">_bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/</div>
+      </div>
+    </header>
+
+    <div class="synthesis">
+      <p>The pair extracts cleanly on mechanics and shape: all 62 prose token references resolve, all 74 frontmatter tokens are type-valid with no missing hex, canonical section order is intact, and the 2026-09-22 amendments (Motion, shared dialog hook, reduced-motion floor, reversed user-meta rule) are cross-wired consistently — except the Header spec, which landed on DESIGN only. It was not yet a clean contract: 1 high finding (no stated contrast target; the committed white-on-primary button pair computed 3.39:1, below AA), 8 medium coverage/discipline misses, 4 low.</p>
+      <p>Post-run remediation (same day, 2026-09-22): <span class="resolved">all 13 findings resolved</span>. The high closed via a user-approved palette decision — <code>primary</code> #1690E8 → #0D75C4 (white labels 4.8:1), with <code>ring</code> and <code>chart-revenue</code> tracking the new azure, plus an explicit AA 4.5:1 floor in the Accessibility Floor. The Header/NavDrawer/cart-summary-bar pairing gaps, permission-denied state, Tailwind 3.4 correction, and remaining medium/low items are fixed in the spines. Only rubric lens ran; no extra reviewers.</p>
+    </div>
+
+    <div class="dimension-summary">
+      <div class="dim-card"><div class="dim-name">1. Flow coverage</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
+      <div class="dim-card"><div class="dim-name">2. Token completeness</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
+      <div class="dim-card"><div class="dim-name">3. Component coverage</div><div class="dim-verdict" style="color: var(--verdict-thin)">thin → repaired</div></div>
+      <div class="dim-card"><div class="dim-name">4. State coverage</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
+      <div class="dim-card"><div class="dim-name">5. Visual reference coverage</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
+      <div class="dim-card"><div class="dim-name">6. Bloat &amp; overspecification</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
+      <div class="dim-card"><div class="dim-name">7. Inheritance discipline</div><div class="dim-verdict" style="color: var(--verdict-adequate)">adequate</div></div>
+      <div class="dim-card"><div class="dim-name">8. Shape fit</div><div class="dim-verdict" style="color: var(--verdict-strong)">strong</div></div>
+    </div>
+
+    <section class="dimension">
+      <details>
+        <summary><h2>1. Flow coverage</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>Sources → SPEC CAP-1…CAP-9 and ARCHITECTURE-SPINE binds; scope commits CAP-2/3/4/5/6/9. 3/3 Key Flows have named protagonists, climax beats, failure paths; every in-scope capability maps to at least one flow.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding"><header>
+            <span class="badge badge-sev-low">low</span>
+            <h3 class="finding-title">Flows carry no CAP ids in headings</h3>
+            <span class="finding-location">EXPERIENCE.md Key Flows</span>
+          </header>
+            <div class="finding-note">Mechanical source-extract had to infer requirement→flow binding from the scope line only.</div>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — capability binding line added under Key Flows.</div>
+          </article>
+          <article class="finding"><header>
+            <span class="badge badge-sev-low">low</span>
+            <h3 class="finding-title">Category CRUD not walked in any flow</h3>
+            <span class="finding-location">EXPERIENCE.md IA Categories / Key Flows</span>
+          </header>
+            <div class="finding-note">CAP-2's modal CRUD half has no journey; only search/filter sides are walked.</div>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — binding line records category CRUD as covered by Component Patterns / State-Interaction rules.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary><h2>2. Token completeness</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>74 frontmatter tokens type-valid; 62/62 prose refs resolved at review time; all colors plain 6-digit hex. Contrast computed for load-bearing pairs.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding"><header>
+            <span class="badge badge-sev-high">high</span>
+            <h3 class="finding-title">White-on-primary 3.39:1 fails AA; no contrast floor stated</h3>
+            <span class="finding-location">DESIGN frontmatter button-primary/nav-active; EXPERIENCE Accessibility Floor</span>
+          </header>
+            <div class="finding-note">button-primary and nav-active rendered white on #1690E8 = 3.39:1, below 4.5:1. text-muted on canvas (4.46:1) and text-subtle on surface (3.05:1) also unstated risks. Badge/success/danger/accent-on-ink pairs pass.</div>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — user chose darken-primary: #1690E8 → #0D75C4 (4.8:1), hover → #0A6BB4, ring + chart-revenue track azure; AA 4.5:1 floor added to Accessibility Floor; deferred-work.md 2.3 entry updated with remaining config sweep.</div>
+          </article>
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">Header spec used literal Tailwind classes</h3>
+            <span class="finding-location">DESIGN.md Components · Header</span>
+          </header>
+            <div class="finding-note"><code>border-slate-700</code> / <code>text-slate-300</code> resolved to no frontmatter token.</div>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — added <code>border-on-ink</code> #334155 and <code>text-on-ink</code> #CBD5E1 tokens; Header references them.</div>
+          </article>
+          <article class="finding"><header>
+            <span class="badge badge-sev-low">low</span>
+            <h3 class="finding-title">Cyan-on-white wording imprecise</h3>
+            <span class="finding-location">DESIGN.md Colors</span>
+          </header>
+            <div class="finding-note">"fails below large-headline sizes" implied large sizes pass; #02F0FD fails at every size (1.41:1).</div>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — reworded to "fails at any size on white (1.41:1)".</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details open>
+        <summary><h2>3. Component coverage</h2><span class="verdict-pill verdict-thin">thin → repaired</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>11 of 13 new components paired cleanly; all four gaps were in the 2026-09-22 amendment surface and the inherited set.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">Header only on DESIGN side</h3>
+            <span class="finding-location">EXPERIENCE.md Component Patterns</span>
+          </header>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — Header row added.</div>
+          </article>
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">NavDrawer only on EXPERIENCE side</h3>
+            <span class="finding-location">DESIGN.md Components</span>
+          </header>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — NavDrawer bullet added (inherited visuals, unchanged).</div>
+          </article>
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">Button/Badge/Toast/LoadingSpinner missing Component Patterns rows</h3>
+            <span class="finding-location">EXPERIENCE.md Component Patterns</span>
+          </header>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — four "Unchanged" rows added, matching Table/Modal precedent.</div>
+          </article>
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">Cart summary bar load-bearing but unnamed as a component</h3>
+            <span class="finding-location">both spines; token components.bottombar</span>
+          </header>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — promoted with a DESIGN bullet and EXPERIENCE row; prose naming standardized to "cart summary bar".</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary><h2>4. State coverage</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>All 10 IA surfaces covered by the universal five-state table; six surface-specific states named; offline explicitly out of scope with rationale.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">Permission-denied state unspecified</h3>
+            <span class="finding-location">EXPERIENCE.md State Patterns; SPEC CAP-1</span>
+          </header>
+            <div class="finding-note">Direct URL hit by an off-role user had no committed treatment despite the Roles column and CAP-1 success criterion.</div>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — explicit refusal row added, matching shipped ProtectedRoute behavior.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary><h2>5. Visual reference coverage</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>Single mockup linked inline, illustrates what it claims, disclaims layout-contract status; spines-win stated; no orphans.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding"><header>
+            <span class="badge badge-sev-low">low</span>
+            <h3 class="finding-title">Stale "No mocks in this run" line</h3>
+            <span class="finding-location">EXPERIENCE.md line ~43</span>
+          </header>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — reworded to name the color/POS reference mockup.</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary><h2>6. Bloat &amp; overspecification</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>No findings. Motion ms values correctly live in prose (no frontmatter type exists); glow-ban repetition documented as deliberate; DESIGN editorial voice permitted, EXPERIENCE decision-tied.</p>
+        </div></div>
+        <div class="findings-list"></div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary><h2>7. Inheritance discipline</h2><span class="verdict-pill verdict-adequate">adequate</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>Both sources resolve; 7/7 EXPERIENCE token refs resolve; component names identical across sections; shared rule vocabulary consistent with memlog amendments.</p>
+        </div></div>
+        <div class="findings-list">
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">"Tailwind 4-based scale" contradicted the stack</h3>
+            <span class="finding-location">DESIGN.md Layout &amp; Spacing</span>
+          </header>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — corrected to "Tailwind 3.4 scale".</div>
+          </article>
+          <article class="finding"><header>
+            <span class="badge badge-sev-medium">medium</span>
+            <h3 class="finding-title">Flow 3 protagonist "owner" reads as a fourth role</h3>
+            <span class="finding-location">EXPERIENCE.md Flow 3 heading</span>
+          </header>
+            <div class="finding-fix"><strong>Fix:</strong> <span class="resolved">Resolved</span> — now "Priya, admin / owner-operator".</div>
+          </article>
+        </div>
+      </details>
+    </section>
+
+    <section class="dimension">
+      <details>
+        <summary><h2>8. Shape fit</h2><span class="verdict-pill verdict-strong">strong</span></summary>
+        <div class="dim-body"><div class="dim-judgment">
+          <p>No findings. All 8 canonical DESIGN sections in order with Motion and Icons as earned invented sections between locked anchors; all 8 EXPERIENCE required defaults present; Responsive and Inspiration both triggered and present.</p>
+        </div></div>
+        <div class="findings-list"></div>
+      </details>
+    </section>
+
+    <div class="mechanical">
+      <h3>Mechanical notes</h3>
+      <ul>
+        <li>Frontmatter complete on both files; updated 2026-09-22; token counts now 38 colors / 10 typography / 3 rounded / 6 spacing / 19 components (memlog:29 count of 31/16/10 is stale, not load-bearing).</li>
+        <li>No broken cross-refs; no Mermaid.</li>
+        <li>Cart element naming standardized to "cart summary bar" (token <code>bottombar</code>); <code>stockTone()</code> naming unified; role "owner" corrected.</li>
+        <li>Stale pointers fixed: mocks note, "Next:" line now points at bmad-build.</li>
+        <li>Post-fix sweep not re-run through the walker — remediation was direct and line-cited above.</li>
+      </ul>
+    </div>
+
+    <footer class="report-footer">
+      <div class="meta">
+        <span>Rubric: _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/review-rubric.md</span>
+        <span>Generated: 2026-09-22</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
