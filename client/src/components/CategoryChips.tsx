@@ -9,7 +9,7 @@ interface CategoryChipsProps {
 
 // POS-only surface, so every chip clears the 44px touch floor (NFR11).
 const CHIP =
-  'inline-flex min-h-[44px] items-center rounded-full px-4 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2';
+  'inline-flex min-h-[44px] items-center rounded-full px-4 text-xs font-medium transition-[color,background-color,border-color,transform] duration-fast ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2';
 
 /**
  * Filters the already-loaded POS grid client-side, issuing no request
