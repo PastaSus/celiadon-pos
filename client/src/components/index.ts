@@ -19,4 +19,5 @@ export { default as PaymentMethodControl } from './PaymentMethodControl';
 export { default as ReceiptView } from './ReceiptView';
 export { default as Table } from './Table';
 export type { Column } from './Table';
+export { default as TopProductsList } from './TopProductsList';
 export { ToastProvider, useToast } from './Toast';

@@ -27,7 +27,7 @@ import type {
   TopProductsResponse
 } from '../../../shared/types'
 import { fetchApi, formatCurrency } from '../lib/api'
-import { Badge, ChartPanel, DateRangeBar, LoadingSpinner, StatCard, Table, defaultRange, stockStatus, stockTone, useToast } from '../components'
+import { Badge, ChartPanel, DateRangeBar, LoadingSpinner, StatCard, Table, TopProductsList, defaultRange, stockStatus, stockTone, useToast } from '../components'
 import type { Column, DateRange, RangePreset } from '../components'
 
 const GRANULARITIES: RevenueGranularity[] = ['daily', 'weekly', 'monthly']
@@ -280,31 +280,6 @@ export default function Dashboard() {
     }
   ]
 
-  const topColumns: Column<TopProduct & { rank: number }>[] = [
-    {
-      key: 'rank',
-      header: 'Rank',
-      render: (row) => row.rank
-    },
-    {
-      key: 'product_name',
-      header: 'Product',
-      render: (row) => row.product_name
-    },
-    {
-      key: 'quantity',
-      header: 'Qty',
-      align: 'right',
-      render: (row) => row.quantity
-    },
-    {
-      key: 'revenue',
-      header: 'Revenue',
-      align: 'right',
-      render: (row) => formatCurrency(row.revenue)
-    }
-  ]
-
   const trendIsEmpty = trend.length === 0 || trend.every((point) => point.revenue === 0)
 
   const rankedTop = topProducts.map((product, index) => ({ ...product, rank: index + 1 }))
@@ -503,12 +478,7 @@ export default function Dashboard() {
           isEmpty={!topLoading && (topFailed || topProducts.length === 0)}
           emptyMessage={topFailed ? 'Failed to load top products.' : undefined}
         >
-          <Table
-            columns={topColumns}
-            rows={rankedTop}
-            rowKey={(row) => row.product_id}
-            emptyMessage="No sales in this range"
-          />
+          <TopProductsList items={rankedTop} />
         </ChartPanel>
 
         <ChartPanel
