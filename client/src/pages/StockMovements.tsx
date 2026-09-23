@@ -232,7 +232,7 @@ export default function StockMovements() {
           )}
         </div>
         {filtersActive && (
-          <p aria-live="polite" className="text-sm text-slate-500 mt-2">
+          <p aria-live="polite" className="text-sm text-slate-600 mt-2">
             {movements.length} {movements.length === 1 ? 'result' : 'results'}
             {searchQuery !== '' && ` for \u201C${searchQuery}\u201D`}
           </p>

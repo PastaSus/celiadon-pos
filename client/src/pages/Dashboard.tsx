@@ -62,7 +62,7 @@ const PAYMENT_LABELS: Record<PaymentMethod, string> = {
 // Slice fills mirror palette tokens (brand/commit/ink) — SVG fills cannot use
 // Tailwind classes, so the hexes live in this one map with their token cited.
 const PAYMENT_FILLS: Record<PaymentMethod, string> = {
-  cash: '#1690E8', // brand
+  cash: '#0D75C4', // brand
   card: '#0B7E71', // commit
   'e-wallet': '#0A1929' // ink
 }
@@ -492,7 +492,7 @@ export default function Dashboard() {
       </div>
 
       {/* Top products and payment mix */}
-      <p className="text-sm text-slate-500 mb-4">
+      <p className="text-sm text-slate-600 mb-4">
         Showing {new Date(`${range.from}T00:00:00`).toLocaleDateString()} to{' '}
         {new Date(`${range.to}T00:00:00`).toLocaleDateString()}.
       </p>

@@ -407,7 +407,7 @@ export default function Inventory() {
           )}
         </div>
         {filtersActive && (
-          <p aria-live="polite" className="text-sm text-slate-500 mt-2">
+          <p aria-live="polite" className="text-sm text-slate-600 mt-2">
             {visibleProducts.length} {visibleProducts.length === 1 ? 'result' : 'results'}
             {searchQuery !== '' && ` for \u201C${searchQuery}\u201D`}
           </p>

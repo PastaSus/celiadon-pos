@@ -193,7 +193,7 @@ export default function Transactions() {
           )}
         </div>
         {filtersActive && (
-          <p aria-live="polite" className="text-sm text-slate-500 mt-2">
+          <p aria-live="polite" className="text-sm text-slate-600 mt-2">
             {filteredSales.length} {filteredSales.length === 1 ? 'result' : 'results'}
           </p>
         )}
@@ -216,7 +216,7 @@ export default function Transactions() {
           >
             Previous
           </Button>
-          <span aria-live="polite" className="text-sm text-slate-500">
+          <span aria-live="polite" className="text-sm text-slate-600">
             Page {page} of {totalPages}
           </span>
           <Button
