@@ -158,6 +158,8 @@ UX-DR29: Receipt presentation - store name from a single exported STORE_NAME con
 UX-DR30: Chart presentation - series colors are the five fixed chart tokens plus the azure revenue series, grid lines are line gray #E0E0E0, axis labels are caption-scale muted slate, no vertical grid lines, no 3D, no gradients, no drop shadows on series, and legends or labels wherever a series name is not obvious.
 UX-DR31: Type tokens applied consistently - numeric-lg is 24px at weight 800 and is the only style for stat values and cart totals, uppercase table heads at caption scale with letter spacing, and monospace is never used for general UI text.
 UX-DR32: Dark mode is out of scope; do not add dark: variants.
+UX-DR33: Functional motion only, per DESIGN.md Motion - 120ms fast, 200ms base, 250ms max; ease-out enter, ease-in exit, no springs; only transform, opacity, color, and background-color animate. One shared dialog hook owns enter/exit plus dialog behavior for Modal, NavDrawer, and CartDrawer. Press feedback is active:scale-[0.98] over fast. Loading frames pulse. One global prefers-reduced-motion rule kills all motion with no overrides. No route, list, celebration, parallax, scroll-jack, or shimmer motion; panels take input on the first frame.
+UX-DR34: Header identity at every width - visible logotype beside the accent mark, compact user chip right-aligned (role always, email at sm and up); the hamburger drawer keeps the full email/role meta and Sign out. Chrome dividers and meta use the ink-line/ink-text tokens.
 ```
 
 ### FR Coverage Map
@@ -214,7 +216,7 @@ Epic 1: UX-DR1 (palette tokens), UX-DR2 (migrate every existing indigo/gray clas
 Epic 2: UX-DR4 (SearchInput), UX-DR5 (FilterSelect), UX-DR6 (CategoryChips), UX-DR14 (stockTone single rule), UX-DR26 (live filters, clear action)
 Epic 3: UX-DR8 (PaymentMethodControl), UX-DR12 (ReceiptView), UX-DR23 (mutations refresh what they invalidated), UX-DR24 (no optimistic money), UX-DR29 (receipt presentation)
 Epic 4: UX-DR9 (StatCard), UX-DR10 (ChartPanel), UX-DR11 (DateRangeBar), UX-DR30 (chart presentation)
-Epic 5: UX-DR7 (CartDrawer), UX-DR21 (breakpoint discipline)
+Epic 5: UX-DR7 (CartDrawer), UX-DR21 (breakpoint discipline), UX-DR33 (motion system), UX-DR34 (header identity)
 ```
 
 ## Epic List
@@ -592,6 +594,8 @@ So that the full menu fits a narrow screen without losing any route.
 **When** the viewport narrows below the mobile breakpoint
 **Then** the nav collapses to a hamburger that opens a drawer listing exactly the same role-filtered routes as desktop (FR35)
 **And** the drawer traps focus, closes on Escape and backdrop tap, and returns focus to the hamburger (UX-DR18)
+**And** the header logotype is visible at every width, rendering `celiadon` beside the accent mark (UX-DR34)
+**And** a compact user chip renders right-aligned at every width — role always, email at `sm` and up — while the drawer keeps the full `email · role` meta and Sign out (UX-DR34)
 ### Story 5.2: Move the cart into a drawer with an always-visible total
 
 As a cashier on a phone,
@@ -627,3 +631,18 @@ So that narrowing the catalog mid-sale never loses the customer's items.
 **Given** a cart with items on POS at any viewport
 **When** the user filters the product list or opens and closes the cart drawer
 **Then** the cart contents, quantities, and totals are unchanged, and only completing the sale or removing items empties it (FR38)
+### Story 5.5: Move with functional motion on a shared dialog hook
+
+As a cashier mid-transaction,
+I want fast, functional feedback when panels open and controls press,
+So that the interface acknowledges me without ever delaying the sale.
+
+**Acceptance Criteria:**
+
+**Given** DESIGN.md Motion specifies functional-only motion and Modal, NavDrawer, and CartDrawer each carry their own focus-trap copy
+**When** the motion system ships
+**Then** durations are 120ms fast / 200ms base / 250ms max, enter ease-out and exit ease-in with no springs, and only `transform`, `opacity`, `color`, and `background-color` animate (UX-DR33)
+**And** one shared dialog hook owns enter/exit plus focus trap, Escape, and focus return for all three dialogs — drawers translate from their edge, Modal fades, exit faster than enter — replacing the three copied effects (UX-DR18, UX-DR33)
+**And** press feedback is `active:scale-[0.98]` over fast on Button, POS tiles, category chips, and nav pills; StatCard and ChartPanel loading placeholders pulse; a global `prefers-reduced-motion: reduce` rule kills all animation and transition duration with no component overrides (UX-DR33)
+**And** banned: route transitions, list/table row animation on filter, sale celebrations, parallax, scroll-jacking, skeleton shimmer, decorative motion; panels accept input on the first frame
+**And** `cd client && npm run build` succeeds

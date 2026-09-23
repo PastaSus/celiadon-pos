@@ -144,7 +144,7 @@ function App() {
                   key={item.path}
                   to={item.path}
                   aria-current={location.pathname === item.path ? 'page' : undefined}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-[color,background-color,transform] duration-fast ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${
                     location.pathname === item.path
                       ? 'bg-brand text-white'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -178,7 +178,7 @@ function App() {
               to={item.path}
               onClick={() => setNavOpen(false)}
               aria-current={location.pathname === item.path ? 'page' : undefined}
-              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink min-h-[44px] ${
+              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-[color,background-color,transform] duration-fast ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink min-h-[44px] ${
                 location.pathname === item.path
                   ? 'bg-brand text-white'
                   : 'text-slate-300 hover:text-white hover:bg-white/10'
