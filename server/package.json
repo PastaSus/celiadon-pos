@@ -1,7 +1,7 @@
 {
-  "name": "pos-server",
+  "name": "celiadon-server",
   "version": "1.0.0",
-  "description": "POS System Backend API",
+  "description": "celiadon POS Backend API",
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch index.ts",

@@ -1,5 +1,5 @@
 ---
-name: 'cube-tech-pos'
+name: 'celiadon-pos'
 type: architecture-spine
 purpose: build-substrate
 altitude: feature
@@ -12,11 +12,11 @@ binds: [CAP-1, CAP-2, CAP-3, CAP-4, CAP-5, CAP-6, CAP-7, CAP-8, CAP-9]
 sources:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
 companions:
-  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/DESIGN.md
-  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/EXPERIENCE.md
+  - _bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/DESIGN.md
+  - _bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/EXPERIENCE.md
 ---
 
-# Architecture Spine — cube-tech-pos
+# Architecture Spine — celiadon-pos
 
 ## Design Paradigm
 
@@ -149,7 +149,7 @@ graph TD
 ## Structural Seed
 
 ```text
-cube-tech-pos/
+celiadon-pos/
 ├── shared/
 │   └── types.ts              # All TypeScript interfaces (User, Product, Category, Sale, etc.)
 ├── client/

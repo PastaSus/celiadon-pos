@@ -7,8 +7,8 @@ route: 'dispatch'
 baseline_commit: '6693b65914dea31c22132af26e921abf52a878f2'
 review_loop_iteration: 0
 context:
-  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/DESIGN.md
-  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/EXPERIENCE.md
+  - _bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/DESIGN.md
+  - _bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/EXPERIENCE.md
 ---
 
 <frozen-after-approval reason="human-owned intent — do not modify unless human renegotiates">

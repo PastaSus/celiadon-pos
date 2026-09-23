@@ -2,16 +2,16 @@
 stepsCompleted: [1, 2, 3, 4]
 inputDocuments:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
-  - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
-  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/DESIGN.md
-  - _bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/EXPERIENCE.md
+  - _bmad-output/architecture/architecture-celiadon-pos-2026-09-16/ARCHITECTURE-SPINE.md
+  - _bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/DESIGN.md
+  - _bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/EXPERIENCE.md
 ---
 
-# cube-tech-pos - Epic Breakdown
+# celiadon-pos - Epic Breakdown
 
 ## Overview
 
-This document provides the complete epic and story breakdown for cube-tech-pos, decomposing the requirements from the SPEC, the Architecture Spine, and the UX design contract into implementable stories.
+This document provides the complete epic and story breakdown for celiadon-pos, decomposing the requirements from the SPEC, the Architecture Spine, and the UX design contract into implementable stories.
 
 **Input set.** No PRD exists for this project. `SPEC.md` (9 capabilities, each with `intent` and `success`) is the requirements source, and it holds no numbered FRs - the FRs below are derived from each capability's `success` statement plus the SPEC's Constraints and Non-goals. The architecture spine and both UX spines are `status: final` and binding; SPEC lives outside `planning-artifacts/`, which is why all three are listed explicitly above.
 
@@ -137,7 +137,7 @@ UX-DR8: New component PaymentMethodControl - three segments (cash, card, e-walle
 UX-DR9: New component StatCard - caption-scale label in muted slate with a tone dot, value at numeric-lg (24px / weight 800) with tabular figures; dot colors come from the fixed chart token set. The low-stock card's value stays amber and never borrows the commit color.
 UX-DR10: New component ChartPanel wrapping Recharts - title at section scale, chart below, its own loading and empty state, "No sales in this range" rendered inside the frame for an empty range rather than an empty axes box, and a stable height across breakpoints so filtering does not make the page jump.
 UX-DR11: New component DateRangeBar - two native date inputs plus preset chips styled like the POS category chips, inclusive of both endpoints, and an invalid range (start after end) is corrected by moving the other endpoint rather than raising an error.
-UX-DR12: New component ReceiptView - renders store name, receipt number, timestamp, line items with quantity and unit price, subtotal, total, payment method, and cashier; read-only; exactly one primary action (Print); monospace body at receipt type scale; consistent with the bundled reference mock at ux-designs/ux-cube-tech-pos-2026-09-17/mockups/pos-key-screen.html.
+UX-DR12: New component ReceiptView - renders store name, receipt number, timestamp, line items with quantity and unit price, subtotal, total, payment method, and cashier; read-only; exactly one primary action (Print); monospace body at receipt type scale; consistent with the bundled reference mock at ux-designs/ux-celiadon-pos-2026-09-17/mockups/pos-key-screen.html.
 UX-DR13: New component EmptyState - one sentence naming the state, centered, with an action only when the user can act. It replaces the current ad-hoc inline paragraph on the POS grid so every empty surface reads the same.
 UX-DR14: Single stock-status rule - implement stockTone(quantity, reorderLevel) and drive every stock badge through Badge with it: red at quantity <= 0, amber when quantity <= reorder_level, teal above. Never hand-pick a color for a stock value.
 UX-DR15: No glow. No neon, bloom, outer light, colored shadow, or blurred halo anywhere - remove any that exist. The only shadow is a short, low-opacity neutral gray (shadow-sm, shadow-md on POS tile hover). Emphasis on the navy chrome comes from flat cyan plus size and weight.
@@ -367,6 +367,31 @@ So that login, role filtering, and the API contracts survive the mass class rewr
 **And** the client imports `Product`, `Sale`, and related types from `shared/types.ts` with no local re-declaration (FR34), and every displayed price passes through `formatCurrency()` (NFR5)
 **And** no page renders its own modal or table markup outside `client/src/components/` (FR33)
 **And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
+### Story 1.7: Rebrand to celiadon
+
+As a recruiter opening the demo,
+I want the product to present as celiadon,
+So that the portfolio piece doesn't borrow a real company's identity.
+
+**Acceptance Criteria:**
+
+**Given** every surface and artifact still carries the pre-rename brand
+**When** the rebrand lands
+**Then** `STORE_NAME = 'celiadon POS'`, Login H1 and `<title>` read `celiadon POS`, logotypes render `celiadon`, package names become `celiadon-*`, configs carry `celiadon-pos`, and planning content plus the two dated folders move to the `celiadon-pos` names with all inbound references updated (full sweep in `../implementation-artifacts/spec-1-7-rebrand-celiadon.md`, approved via `sprint-change-proposal-2026-09-23.md` §A1)
+**And** a repo-wide search finds zero remaining old-brand strings outside `.git/`, `node_modules/`, frozen review evidence, machine-local checkout paths, and the change proposal
+**And** `cd server` with `npx tsc --noEmit` and `cd client` with `npm run build` both succeed
+### Story 1.8: Apply the AA palette correction
+
+As a cashier under fluorescent light,
+I want primary-button and nav labels that meet WCAG AA,
+So that the azure brand color doesn't fail contrast on every filled control.
+
+**Acceptance Criteria:**
+
+**Given** DESIGN.md commits `primary` #0D75C4 and `primary-hover` #0A6BB4 while `tailwind.config.js` still carries #1690E8
+**When** the correction is applied
+**Then** `brand.DEFAULT` = #0D75C4, `brand.hover` = #0A6BB4, `ring` and the Dashboard revenue/cash series track the new azure, zero `#1690E8` literals remain, and muted/subtle text pairs are spot-verified against the EXPERIENCE.md Accessibility Floor (full criteria in `sprint-change-proposal-2026-09-23.md` §A2)
+**And** `cd client` with `npm run build` succeeds
 ## Epic 2: Organize the catalog, find anything, know what is low
 
 A manager groups products into categories, a cashier finds any product by typing part of its name, filters by category and stock, and sees exactly why a quantity changed.
