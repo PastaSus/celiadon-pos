@@ -13,7 +13,7 @@ interface PaymentMethodControlProps {
 
 // Cart-panel surface, so every segment clears the 44px touch floor (NFR11).
 const SEGMENT =
-  'inline-flex min-h-[44px] flex-1 items-center justify-center rounded-full px-4 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2';
+  'inline-flex min-h-[44px] flex-1 items-center justify-center rounded-full px-4 text-xs font-medium transition-[color,background-color,border-color,transform] duration-fast ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2';
 
 /**
  * Segmented single-select for the payment method at checkout (FR14).

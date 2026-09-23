@@ -33,7 +33,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`rounded-lg transition-colors disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
+      className={`rounded-lg transition-[color,background-color,border-color,transform] duration-fast ease-out active:scale-[0.98] disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${VARIANTS[variant]} ${SIZES[size]} ${className}`}
       {...rest}
     >
       {children}

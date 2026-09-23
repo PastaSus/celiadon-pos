@@ -1,7 +1,7 @@
 <!-- bmad:context -->
 <!-- Verified 2026-09-16 against e920eae. Managed by bmad-project-context; edits inside this block are replaced on refresh. Keep anything you want preserved outside the markers. -->
 
-## cube-tech-pos
+## celiadon-pos
 
 Point-of-sale system for retail inventory and sales. Vite + React 18 + Tailwind (client), Express + TypeScript + PostgreSQL (server), USD ($) currency throughout. Monorepo with separate `client/` and `server/` packages, each with own `package.json` and `node_modules`. Planning artifacts live in `_bmad-output/` (spec, architecture spine, implementation specs).
 

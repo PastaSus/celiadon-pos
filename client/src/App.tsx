@@ -129,16 +129,22 @@ function App() {
               >
                 <Menu size={24} aria-hidden="true" />
               </button>
-              <span className="sr-only">Cube Tech POS</span>
-              <Box size={28} aria-hidden="true" className="text-accent" />
+              <span className="flex items-center gap-2 whitespace-nowrap">
+                <Box size={28} aria-hidden="true" className="text-accent" />
+                <span className="text-lg font-extrabold tracking-tight text-white">celiadon</span>
+              </span>
             </div>
+            <span className="lg:hidden flex items-center min-w-0 text-xs text-ink-text">
+              {user.role}
+              <span className="hidden sm:inline truncate"> · {user.email}</span>
+            </span>
             <div className="hidden lg:flex items-center space-x-1 sm:space-x-4">
               {navItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   aria-current={location.pathname === item.path ? 'page' : undefined}
-                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${
+                  className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-[color,background-color,transform] duration-fast ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink ${
                     location.pathname === item.path
                       ? 'bg-brand text-white'
                       : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -147,8 +153,8 @@ function App() {
                   {item.label}
                 </Link>
               ))}
-              <div className="flex items-center pl-2 border-l border-slate-700">
-                <span className="hidden md:inline text-sm text-slate-300 mr-3">
+              <div className="flex items-center pl-2 border-l border-ink-line">
+                <span className="hidden md:inline text-sm text-ink-text mr-3">
                   {user.email} · {user.role}
                 </span>
                 <button
@@ -172,7 +178,7 @@ function App() {
               to={item.path}
               onClick={() => setNavOpen(false)}
               aria-current={location.pathname === item.path ? 'page' : undefined}
-              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink min-h-[44px] ${
+              className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-[color,background-color,transform] duration-fast ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ink min-h-[44px] ${
                 location.pathname === item.path
                   ? 'bg-brand text-white'
                   : 'text-slate-300 hover:text-white hover:bg-white/10'
@@ -182,8 +188,8 @@ function App() {
             </Link>
           ))}
         </nav>
-        <div className="mt-4 pt-4 border-t border-slate-700">
-          <p className="px-3 text-sm text-slate-300 mb-2">
+        <div className="mt-4 pt-4 border-t border-ink-line">
+          <p className="px-3 text-sm text-ink-text mb-2">
             {user.email} · {user.role}
           </p>
           <button

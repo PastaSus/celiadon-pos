@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
 import type { CartItem, PaymentMethod } from '../../../shared/types';
 import { formatCurrency } from '../lib/api';
+import { useDialog } from '../hooks/useDialog';
 import Button from './Button';
 import CartItems, { EMPTY_CART_MESSAGE } from './CartItems';
 import PaymentMethodControl from './PaymentMethodControl';
@@ -20,9 +20,6 @@ interface CartDrawerProps {
   onRemove: (productId: number) => void;
 }
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 // Bottom-rising cart for viewports below lg (Story 5.2). A viewport
 // presentation of the one POS cart — same dialog behavior as NavDrawer, pinned
 // navy footer carrying the total in flat accent with Complete Sale beside it.
@@ -39,65 +36,19 @@ export default function CartDrawer({
   onUpdateQuantity,
   onRemove
 }: CartDrawerProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const openerRef = useRef<Element | null>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  const { panelRef, mounted, shown } = useDialog({ open, onClose });
 
-  useEffect(() => {
-    if (!open) return;
+  if (!mounted) return null;
 
-    openerRef.current = document.activeElement;
-
-    const panel = panelRef.current;
-    // Move focus inside the dialog on open.
-    const first = panel?.querySelector<HTMLElement>(FOCUSABLE);
-    (first ?? panel)?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onCloseRef.current();
-        return;
-      }
-      if (event.key !== 'Tab' || !panel) return;
-      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null || el === document.activeElement
-      );
-      if (focusable.length === 0) {
-        event.preventDefault();
-        panel.focus();
-        return;
-      }
-      const firstEl = focusable[0];
-      const lastEl = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === firstEl) {
-        event.preventDefault();
-        lastEl.focus();
-      } else if (!event.shiftKey && document.activeElement === lastEl) {
-        event.preventDefault();
-        firstEl.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown, true);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown, true);
-      // Return focus to the element that opened the dialog.
-      const opener = openerRef.current as HTMLElement | null;
-      if (opener && typeof opener.focus === 'function') {
-        opener.focus();
-      }
-      openerRef.current = null;
-    };
-  }, [open]);
-
-  if (!open) return null;
+  const scrim = shown ? 'opacity-100 duration-base ease-out' : 'opacity-0 duration-fast ease-in';
+  const panel = shown
+    ? 'translate-y-0 duration-base ease-out'
+    : 'translate-y-full duration-fast ease-in';
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
       <div
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className={`absolute inset-0 bg-black bg-opacity-50 transition-opacity ${scrim}`}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -107,7 +58,7 @@ export default function CartDrawer({
         aria-modal="true"
         aria-label={`Cart, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
         tabIndex={-1}
-        className="absolute bottom-0 inset-x-0 max-h-[85vh] flex flex-col bg-white rounded-t-lg focus:outline-none"
+        className={`absolute bottom-0 inset-x-0 max-h-[85vh] flex flex-col bg-white rounded-t-lg focus:outline-none transition-transform ${panel}`}
       >
         <div className="flex items-center justify-between p-4 pb-2">
           <h2 className="text-xl font-bold">

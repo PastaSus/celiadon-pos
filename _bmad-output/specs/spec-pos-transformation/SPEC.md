@@ -82,5 +82,5 @@ The app looks and feels like a real retail POS: you log in, see a dashboard with
 
 Both are resolved. The questions are kept verbatim above the answers so the decision trail survives; the answers are binding.
 
-- **Should the store name on receipts be configurable, or hardcode "Cube Tech POS"?** — **Hardcode**, as a single exported `STORE_NAME = "Cube Tech POS"` constant in the receipt module. Multi-store is a non-goal, so one constant keeps it swappable without touching layout.
+- **Should the store name on receipts be configurable, or hardcode "celiadon POS"?** — **Hardcode**, as a single exported `STORE_NAME = "celiadon POS"` constant in the receipt module. Multi-store is a non-goal, so one constant keeps it swappable without touching layout.
 - **What is the default low-stock threshold — fixed at 10, or configurable per product?** — **Per product**: `products.reorder_level` with `DEFAULT 10`. Low stock is `quantity > 0 AND quantity <= reorder_level`; out of stock is `quantity <= 0`. (Both settled in `EXPERIENCE.md`.)

@@ -1,4 +1,4 @@
-# Spine Pair Review — cube-tech-pos
+# Spine Pair Review — celiadon-pos
 
 ## Overall verdict
 The pair extracts cleanly on mechanics and shape: all 62 prose token references resolve, all 74 frontmatter tokens are type-valid with no missing hex, canonical section order is intact, and the 2026-09-22 amendments (Motion, shared dialog hook, reduced-motion floor, reversed user-meta rule) are cross-wired consistently — except the Header spec, which landed on DESIGN only. It is not yet a clean contract: 1 high finding (no stated contrast target; the committed white-on-primary button pair computes 3.39:1, below AA), 8 medium coverage/discipline misses, 4 low. Fix the high and the Header/NavDrawer pairing gaps before story-dev treats this folder as frozen; the rest can ride as known findings.

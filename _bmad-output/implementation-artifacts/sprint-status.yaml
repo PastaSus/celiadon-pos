@@ -1,4 +1,4 @@
-# Sprint status - cube-tech-pos
+# Sprint status - celiadon-pos
 # Generated 2026-09-18 by bmad-sprint-planning (manual pass - the deterministic generator
 # script is not present in this install). Readiness gate: PASS, after the FR/UX-DR citation
 # reconciliation in epics.md shipped in the same change.
@@ -8,7 +8,8 @@
 
 generated: 2026-09-18
 source: _bmad-output/planning-artifacts/epics.md
-last_updated: 2026-09-19
+last_updated: 2026-09-23
+change_proposal: _bmad-output/planning-artifacts/sprint-change-proposal-2026-09-23.md
 
 development_status:
   # Epic 1: The product looks and behaves like one app
@@ -19,6 +20,7 @@ development_status:
   1-4-migrate-pages-palette: review
   1-5-accessibility-floor: review
   1-6-post-retrofit-verification: review
+  1-7-rename: review
   1-8-aa-palette: review
 
   # Epic 2: Organize the catalog, find anything, know what is low
@@ -49,3 +51,4 @@ development_status:
   5-2-cart-drawer: review
   5-3-responsive-stacking: review
   5-4-cart-persistence: review
+  5-5-motion: review

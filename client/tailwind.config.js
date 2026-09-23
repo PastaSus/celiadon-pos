@@ -11,7 +11,8 @@ export default {
       // ink = navy chrome, canvas = page bg, panel = surface-muted, line = border.
       // Deferred to later stories: chart series, overlay. Slate text ramp and
       // surface white use Tailwind defaults (slate-*, white); focus rings use
-      // ring-brand / ring-accent (ring == brand).
+      // ring-brand / ring-accent (ring == brand). Navy-chrome accents live
+      // under ink (ink-line dividers, ink-text meta) per the Header spec.
       colors: {
         brand: {
           DEFAULT: '#0D75C4',
@@ -46,6 +47,8 @@ export default {
         },
         ink: {
           DEFAULT: '#0A1929',
+          line: '#334155',
+          text: '#CBD5E1',
         },
         canvas: {
           DEFAULT: '#E8EDF3',

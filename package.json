@@ -1,7 +1,7 @@
 {
-  "name": "pos-system",
+  "name": "celiadon-pos",
   "version": "1.0.0",
-  "description": "POS System with Inventory Management",
+  "description": "celiadon POS with Inventory Management",
   "private": true,
   "scripts": {
     "dev:client": "cd client && npm run dev",

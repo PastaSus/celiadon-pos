@@ -179,7 +179,7 @@ export default function POS() {
                 disabled={outOfStock}
                 aria-label={`Add ${product.name} to cart`}
                 onClick={() => addToCart(product)}
-                className={`bg-white rounded-lg shadow-md p-4 text-left transition-all hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
+                className={`bg-white rounded-lg shadow-md p-4 text-left transition-transform duration-fast ease-out hover:shadow-lg active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 ${
                   outOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                 }`}
               >

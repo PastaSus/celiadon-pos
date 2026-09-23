@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Box, X } from 'lucide-react';
+import { useDialog } from '../hooks/useDialog';
 
 interface NavDrawerProps {
   open: boolean;
@@ -9,73 +9,24 @@ interface NavDrawerProps {
   id?: string;
 }
 
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 // Left slide-in navigation drawer (Story 5.1). Same dialog behavior as Modal
 // (scrim close, Escape close, focus trap, focus return), navy chrome to match
 // the nav bar. Links, user meta, and Sign out render as children so the role
 // filtering stays with the caller.
 export default function NavDrawer({ open, onClose, children, id = 'mobile-nav' }: NavDrawerProps) {
-  const panelRef = useRef<HTMLDivElement>(null);
-  const openerRef = useRef<Element | null>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
+  const { panelRef, mounted, shown } = useDialog({ open, onClose });
 
-  useEffect(() => {
-    if (!open) return;
+  if (!mounted) return null;
 
-    openerRef.current = document.activeElement;
-
-    const panel = panelRef.current;
-    // Move focus inside the dialog on open.
-    const first = panel?.querySelector<HTMLElement>(FOCUSABLE);
-    (first ?? panel)?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.stopPropagation();
-        onCloseRef.current();
-        return;
-      }
-      if (event.key !== 'Tab' || !panel) return;
-      const focusable = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null || el === document.activeElement
-      );
-      if (focusable.length === 0) {
-        event.preventDefault();
-        panel.focus();
-        return;
-      }
-      const firstEl = focusable[0];
-      const lastEl = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === firstEl) {
-        event.preventDefault();
-        lastEl.focus();
-      } else if (!event.shiftKey && document.activeElement === lastEl) {
-        event.preventDefault();
-        firstEl.focus();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown, true);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown, true);
-      // Return focus to the element that opened the dialog.
-      const opener = openerRef.current as HTMLElement | null;
-      if (opener && typeof opener.focus === 'function') {
-        opener.focus();
-      }
-      openerRef.current = null;
-    };
-  }, [open]);
-
-  if (!open) return null;
+  const scrim = shown ? 'opacity-100 duration-base ease-out' : 'opacity-0 duration-fast ease-in';
+  const panel = shown
+    ? 'translate-x-0 duration-base ease-out'
+    : '-translate-x-full duration-fast ease-in';
 
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black bg-opacity-50"
+        className={`absolute inset-0 bg-black bg-opacity-50 transition-opacity ${scrim}`}
         onClick={onClose}
         aria-hidden="true"
       />
@@ -86,10 +37,10 @@ export default function NavDrawer({ open, onClose, children, id = 'mobile-nav' }
         aria-modal="true"
         aria-label="Navigation"
         tabIndex={-1}
-        className="absolute left-0 top-0 h-full w-72 max-w-[85vw] overflow-y-auto bg-ink p-4 focus:outline-none"
+        className={`absolute left-0 top-0 h-full w-72 max-w-[85vw] overflow-y-auto bg-ink p-4 focus:outline-none transition-transform ${panel}`}
       >
         <div className="flex items-center justify-between mb-4">
-          <span className="sr-only">Cube Tech POS</span>
+          <span className="sr-only">celiadon</span>
           <Box size={28} aria-hidden="true" className="text-accent" />
           <button
             type="button"

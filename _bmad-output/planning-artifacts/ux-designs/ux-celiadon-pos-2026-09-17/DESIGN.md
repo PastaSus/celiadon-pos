@@ -1,10 +1,10 @@
 ---
-name: Cube Tech POS
+name: celiadon POS
 description: Retail point-of-sale for a single store. Azure/teal/cyan palette on dark-navy chrome inspired by Square, Toast, and Shopify POS, shipped via tailwind.config.js theme.extend (brand, accent, teal, ink); this file specifies the system the remaining capabilities build against.
 status: final
 sources:
   - _bmad-output/specs/spec-pos-transformation/SPEC.md
-  - _bmad-output/architecture/architecture-cube-tech-pos-2026-09-16/ARCHITECTURE-SPINE.md
+  - _bmad-output/architecture/architecture-celiadon-pos-2026-09-16/ARCHITECTURE-SPINE.md
 updated: 2026-09-22
 colors:
   # Cool azure/teal/cyan system on dark-navy chrome, inspired by Square, Toast, and Shopify POS. Accents stay in the cyan-to-azure band; neutrals are blue-gray. Ships via tailwind.config.js theme.extend as named colors (brand, accent, teal, ink) - see Colors section. Shipped bg-indigo-*/text-gray-* classes migrate to the new names.
@@ -90,17 +90,17 @@ spacing:
   page-max: 1280px # max-w-7xl - content width
 ---
 
-# Cube Tech POS - Design Spine
+# celiadon POS - Design Spine
 
 > Brownfield. The interaction model already ships: the component library in `client/src/components/` plus the route and auth structure in `client/src/App.tsx`. This file rebuilds the visual language on an azure/teal/cyan palette with dark-navy chrome, inspired by Square, Toast, and Shopify POS, and specifies what the six remaining capabilities add. It is not a tweak to Tailwind defaults.
 
 ## Brand & Style
 
-Cube Tech POS is a single-store retail counter tool. The person using it is standing up, mid-transaction, often with a customer waiting, frequently on a tablet or a phone. The aesthetic posture follows from that: a dark-navy chrome that frames the work, high-contrast white work surfaces, one azure brand color that marks the live action, status color reserved for stock truth, and no decoration that competes with a price or a quantity.
+celiadon POS is a single-store retail counter tool. The person using it is standing up, mid-transaction, often with a customer waiting, frequently on a tablet or a phone. The aesthetic posture follows from that: a dark-navy chrome that frames the work, high-contrast white work surfaces, one azure brand color that marks the live action, status color reserved for stock truth, and no decoration that competes with a price or a quantity.
 
 Aesthetic keywords: **utilitarian, legible at arm's length, cool chrome, honest status.** Square shows how a navy header anchors a register, Toast shows how one green can own every commit action, and Shopify POS shows how cool gray surfaces make products and prices the loudest thing on screen. This system takes all three: navy chrome, one azure for intent, deep-teal commit, slate work surfaces, and flat cyan that appears only on the dark chrome.
 
-The brand color is `{colors.primary}` (azure). It marks exactly three things: the Cube Tech POS logotype, the active nav item, and the primary action on a surface. On the POS screen the commit action is `{colors.success}` (deep teal) instead, following Toast: "Complete Sale" ends a transaction rather than navigating within one, so it owns its own color.
+The brand color is `{colors.primary}` (azure). It marks exactly three things: the celiadon logotype, the active nav item, and the primary action on a surface. On the POS screen the commit action is `{colors.success}` (deep teal) instead, following Toast: "Complete Sale" ends a transaction rather than navigating within one, so it owns its own color.
 
 Everything else is cool neutral. Cards are `{colors.surface}` on a `{colors.canvas}` page, the nav bar is `{colors.ink}` dark navy, and dividers are `{colors.border}`. Nothing is tinted for taste, and there are no gradients, no accent flourishes, and no decorative or celebratory motion - motion exists only as functional feedback, specified in Motion. `{colors.accent}` cyan appears only as a flat fill on the dark chrome - the logo mark, the total numerals on the mobile bar - never as body text on white.
 
@@ -238,7 +238,7 @@ Technique is CSS transitions and at most a few keyframes in `index.css` - no ani
 - **FilterSelect** - a native `select` wearing `{components.input}`, with the same height as `SearchInput`. Never a custom dropdown: the native control is faster on a tablet and needs no keyboard work.
 - **Category chips (POS)** - `{rounded.full}` pills at `{typography.caption}` scale. Inactive: `{colors.surface}` fill with `{colors.primary-strong}` text on a `{colors.primary-subtle}` wash row. Active: `{colors.primary}` fill with `{colors.surface}` text. Exactly one is active at a time, and the active chip is the only azure element in the grid's header area.
 - **CartDrawer** - `{components.cart-drawer}` panel rising from the bottom edge, full width on a phone, capped at a comfortable reading width on a large phone in landscape. Same scrim as `Modal`. A drag/close affordance at the top edge, cart contents as in the desktop cart, and a pinned footer on `{colors.ink}` navy holding the total in flat `{colors.accent}` cyan numerals with Complete Sale beside it, so the commit action never scrolls out of reach and the total is the largest, heaviest number on the panel. Enters and exits per Motion (base in, faster out, shared dialog hook).
-- **Header (app shell, updated)** - the `{components.nav-chrome}` bar at every width: hamburger trigger below `lg`, the `{colors.accent}` logo mark with the **visible** `Cube Tech POS` logotype beside it (no longer `sr-only` - a sighted user on a phone should see the product name), and a compact user chip right-aligned showing the signed-in user's role with their email where space allows (`sm` and up show the email; below `sm` the role alone). The chip sits behind a 1px `{colors.border-on-ink}` divider, text at `{typography.caption}` in `{colors.text-on-ink}`, matching the desktop meta treatment. This deliberately reverses the old hide-below-`md` rule: staff share one till, and who is signed in must be glanceable without opening the drawer. The hamburger drawer keeps the full `email · role` meta and Sign out unchanged.
+- **Header (app shell, updated)** - the `{components.nav-chrome}` bar at every width: hamburger trigger below `lg`, the `{colors.accent}` logo mark with the **visible** `celiadon` logotype beside it (no longer `sr-only` - a sighted user on a phone should see the product name), and a compact user chip right-aligned showing the signed-in user's role with their email where space allows (`sm` and up show the email; below `sm` the role alone). The chip sits behind a 1px `{colors.border-on-ink}` divider, text at `{typography.caption}` in `{colors.text-on-ink}`, matching the desktop meta treatment. This deliberately reverses the old hide-below-`md` rule: staff share one till, and who is signed in must be glanceable without opening the drawer. The hamburger drawer keeps the full `email · role` meta and Sign out unchanged.
 - **NavDrawer** - inherited visuals, unchanged from Story 5.1: `{components.nav-chrome}` navy panel sliding from the left edge, `w-72` capped at `85vw`, same 50 percent scrim as `Modal`, `{rounded.lg}`-free hard edge (it is chrome, not a card). Behavioral spec and Motion duties live in EXPERIENCE.md.Component Patterns and DESIGN.md Motion; this bullet exists so the pair extracts complete.
 - **Cart summary bar** - `{components.bottombar}` fixed bar below `lg` on POS: `{colors.ink}` navy, item count in `{colors.text-on-ink}`, total in flat `{colors.accent}` cyan at `{typography.numeric-lg}`, whole bar is the tap target that opens CartDrawer. Minimum 44px tall. Resets to zero after a completed sale.
 - **PaymentMethodControl** - a three-segment control in a `{colors.primary-subtle}` wash with a `{rounded.lg}` container. The selected segment is a filled `{colors.primary}` azure pill with white text; unselected segments are `{colors.primary-strong}` text only. It sits directly above Complete Sale, so the choice reads as part of the commit rather than a separate step.
