@@ -129,9 +129,15 @@ function App() {
               >
                 <Menu size={24} aria-hidden="true" />
               </button>
-              <span className="sr-only">celiadon</span>
-              <Box size={28} aria-hidden="true" className="text-accent" />
+              <span className="flex items-center gap-2 whitespace-nowrap">
+                <Box size={28} aria-hidden="true" className="text-accent" />
+                <span className="text-lg font-extrabold tracking-tight text-white">celiadon</span>
+              </span>
             </div>
+            <span className="lg:hidden flex items-center min-w-0 text-xs text-ink-text">
+              {user.role}
+              <span className="hidden sm:inline truncate"> · {user.email}</span>
+            </span>
             <div className="hidden lg:flex items-center space-x-1 sm:space-x-4">
               {navItems.map((item) => (
                 <Link
@@ -147,8 +153,8 @@ function App() {
                   {item.label}
                 </Link>
               ))}
-              <div className="flex items-center pl-2 border-l border-slate-700">
-                <span className="hidden md:inline text-sm text-slate-300 mr-3">
+              <div className="flex items-center pl-2 border-l border-ink-line">
+                <span className="hidden md:inline text-sm text-ink-text mr-3">
                   {user.email} · {user.role}
                 </span>
                 <button
@@ -182,8 +188,8 @@ function App() {
             </Link>
           ))}
         </nav>
-        <div className="mt-4 pt-4 border-t border-slate-700">
-          <p className="px-3 text-sm text-slate-300 mb-2">
+        <div className="mt-4 pt-4 border-t border-ink-line">
+          <p className="px-3 text-sm text-ink-text mb-2">
             {user.email} · {user.role}
           </p>
           <button
