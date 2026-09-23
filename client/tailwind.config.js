@@ -15,8 +15,8 @@ export default {
       // under ink (ink-line dividers, ink-text meta) per the Header spec.
       colors: {
         brand: {
-          DEFAULT: '#1690E8',
-          hover: '#0E7BCB',
+          DEFAULT: '#0D75C4',
+          hover: '#0A6BB4',
           strong: '#0B5EA6',
           surface: '#D8EEFD',
           subtle: '#EBF6FE',

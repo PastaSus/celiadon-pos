@@ -121,7 +121,7 @@ export default function DateRangeBar({ from, to, preset, onChange }: DateRangeBa
             className="border-line-strong border rounded-lg px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
-        <span aria-hidden="true" className="text-sm text-slate-500">
+        <span aria-hidden="true" className="text-sm text-slate-600">
           to
         </span>
         <div>
