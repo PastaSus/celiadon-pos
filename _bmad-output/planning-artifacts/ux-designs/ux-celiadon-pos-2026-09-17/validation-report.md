@@ -1,7 +1,7 @@
-# Validation Report — cube-tech-pos
+# Validation Report — celiadon-pos
 
-- **DESIGN.md:** `_bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/DESIGN.md`
-- **EXPERIENCE.md:** `_bmad-output/planning-artifacts/ux-designs/ux-cube-tech-pos-2026-09-17/EXPERIENCE.md`
+- **DESIGN.md:** `_bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/DESIGN.md`
+- **EXPERIENCE.md:** `_bmad-output/planning-artifacts/ux-designs/ux-celiadon-pos-2026-09-17/EXPERIENCE.md`
 - **Run at:** 2026-09-22
 
 ## Overall verdict

@@ -2,12 +2,12 @@ import type { ApiError, AuthResponse, User } from '../../../shared/types';
 
 // Local dev: Vite proxies /api -> localhost:5000. Deployed (Vercel): the
 // frontend is static, so set VITE_API_URL to the backend's URL
-// (e.g. https://cube-tech-pos-api.vercel.app). No trailing slash.
+// (e.g. https://celiadon-pos-api.vercel.app, once the Vercel project is renamed). No trailing slash.
 const API_BASE = `${import.meta.env.VITE_API_URL ?? ''}/api`;
 
 const TOKEN_KEY = 'pos.token';
 
-export const STORE_NAME = 'Cube Tech POS';
+export const STORE_NAME = 'celiadon POS';
 
 export class ApiRequestError extends Error {
   status: number;

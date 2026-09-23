@@ -89,7 +89,7 @@ export default function NavDrawer({ open, onClose, children, id = 'mobile-nav' }
         className="absolute left-0 top-0 h-full w-72 max-w-[85vw] overflow-y-auto bg-ink p-4 focus:outline-none"
       >
         <div className="flex items-center justify-between mb-4">
-          <span className="sr-only">Cube Tech POS</span>
+          <span className="sr-only">celiadon</span>
           <Box size={28} aria-hidden="true" className="text-accent" />
           <button
             type="button"

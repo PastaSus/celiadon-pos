@@ -4,7 +4,7 @@
 
 ## Goal
 
-Unify every already-shipped surface onto one visual system — named azure/teal/cyan palette on navy chrome, a single icon library, and a shared accessibility floor — before any feature work, so later epics build on one design language instead of re-churning the same components, pages, and app shell six times.
+Unify every already-shipped surface onto one visual system and one product identity — named azure/teal/cyan palette on navy chrome, a single icon library, a shared accessibility floor, and the celiadon name everywhere — before any feature work, so later epics build on one design language and one brand instead of re-churning the same components, pages, app shell, and strings.
 
 ## Stories
 
@@ -14,6 +14,8 @@ Unify every already-shipped surface onto one visual system — named azure/teal/
 - Story 1.4: Migrate the pages and app shell to the palette
 - Story 1.5: Hold the accessibility floor on every shipped surface
 - Story 1.6: Prove auth, roles, and shared types still hold after the retrofit
+- Story 1.7: Rebrand to celiadon (approved in sprint-change-proposal-2026-09-23; not yet registered in epics.md)
+- Story 1.8: Apply the AA palette correction (approved in sprint-change-proposal-2026-09-23; primary #1690E8 → #0D75C4)
 
 ## Requirements & Constraints
 
@@ -24,6 +26,8 @@ Unify every already-shipped surface onto one visual system — named azure/teal/
 - Only free tools and tiers; the only new runtime dependency permitted in this epic is the icon library. No state-management, date, PDF, second UI kit, or second icon library.
 - No raw hex or arbitrary color values on any surface; no surface may reference the old raw indigo/gray utilities after migration. Dark mode is out of scope — do not add dark variants.
 - Secrets stay out of the repo (database URL and JWT secret from env); demo credentials must not be weakened or multiplied.
+- Product identity is celiadon everywhere: logotype reads `celiadon` with no "POS" suffix; titles, `<title>`, and receipts read `celiadon POS`; repo and package names use `celiadon-pos`; no old-brand string remains in code, config, or planning content (frozen review diffs/prompts and machine-local absolute checkout paths excepted — see Story 1.7 spec). The rebrand story (1.7) lands before any other new string work so nothing mints old-brand text.
+- Filled-button and nav-pill labels must meet the WCAG AA contrast floor (4.5:1 for body/control text) — the corrected azure primary is dark enough for white labels; muted/subtle text pairs are spot-verified against the same floor and fixed as palette tokens, never per component.
 
 ## Technical Decisions
 
@@ -32,6 +36,7 @@ Unify every already-shipped surface onto one visual system — named azure/teal/
 - Use one icon library for everything with inherited currentColor, small fixed sizes (compact beside captions, medium in buttons/inputs, large standalone), and the library default stroke. Ban emoji, Unicode glyphs, hand-written inline SVG, and icon fonts as icons.
 - Keep the established layering: pages compose extracted components, auth state lives in a top-level context with the token in local storage sent as a Bearer header, and role filtering derives from a single nav table. The mass class rewrite must not alter route behavior.
 - New shared EmptyState component replaces ad-hoc inline empty paragraphs so grids and panels share one empty-surface pattern; stock badges everywhere go through the single quantity-to-tone rule rather than hand-picked colors.
+- Rename is a mechanical string/path sweep only: code constants and JSX strings, package names, project config name, and planning-artifact content plus their dated folder names (with all inbound path references updated). Repo, hosting-project, and redeploy actions stay manual and wait until the rebrand story merges.
 
 ## UX & Interaction Patterns
 
@@ -45,4 +50,5 @@ Unify every already-shipped surface onto one visual system — named azure/teal/
 
 - Token definition is the prerequisite for both migration stories; component migration precedes page/shell migration so pages compose already-migrated components without rework.
 - Icon installation precedes component migration touching the close control; the accessibility story builds on the migrated components and pages; the final regression story requires all prior stories and gates the epic.
+- The rebrand (1.7) precedes the AA palette correction (1.8) and all Epic 5 header/motion work so no new story mints old-brand strings; the palette correction satisfies the original token story's own source-of-truth criterion retroactively.
 - This epic blocks all feature epics: later search, payment, chart, and responsive work assumes the token names, icon library, EmptyState, and focus/overlay/toast behaviors already exist.

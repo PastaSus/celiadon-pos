@@ -24,7 +24,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-canvas flex items-center justify-center px-4">
       <div className="bg-white rounded-lg shadow-md p-6 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-brand mb-1">Cube Tech POS</h1>
+        <h1 className="text-2xl font-bold text-brand mb-1">celiadon POS</h1>
         <p className="text-sm text-slate-500 mb-6">Sign in to continue</p>
 
         <form onSubmit={handleSubmit}>

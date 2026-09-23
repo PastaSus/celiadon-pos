@@ -129,7 +129,7 @@ function App() {
               >
                 <Menu size={24} aria-hidden="true" />
               </button>
-              <span className="sr-only">Cube Tech POS</span>
+              <span className="sr-only">celiadon</span>
               <Box size={28} aria-hidden="true" className="text-accent" />
             </div>
             <div className="hidden lg:flex items-center space-x-1 sm:space-x-4">

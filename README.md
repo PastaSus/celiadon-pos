@@ -1,4 +1,4 @@
-# POS System
+# celiadon POS
 
 A web-based Point of Sale (POS) system with inventory management built with React, Tailwind CSS, Node.js, Express, and PostgreSQL.
 
@@ -29,7 +29,7 @@ A web-based Point of Sale (POS) system with inventory management built with Reac
 
 ```bash
 git clone <repository-url>
-cd pos-system
+cd celiadon-pos
 ```
 
 ### 2. Install dependencies
@@ -68,7 +68,7 @@ PORT=5000
 
 `server/db.sql` inserts the first admin user:
 
-- **Email:** `admin@cubetech.pos`
+- **Email:** `admin@celiadon.pos`
 - **Password:** `Admin123!` (demo only — change it via a new `/api/auth/register` + delete, or
   update the hash, before any real use)
 
